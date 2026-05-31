@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D20 Thermal Sticker Generator</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ══ SIDEBAR ══ */
+#sidebar {
+  width: 300px;
+  background: #222;
+  border-right: 1px solid #333;
+  padding: 20px;
+  overflow-y: auto;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+}
+
+#sidebar h1 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+#sidebar .subtitle {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.section h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #aaa;
+  margin-bottom: 12px;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.control-row label {
+  font-size: 13px;
+  flex: 1;
+  color: #ccc;
+}
+
+.control-row select,
+.control-row input[type="number"],
+.control-row input[type="text"] {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  flex: 1;
+}
+
+.control-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+textarea {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.btn {
+  background: #444;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  width: 100%;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+
+.btn:hover {
+  background: #555;
+}
+
+.btn-primary {
+  background: #0066cc;
+}
+
+.btn-primary:hover {
+  background: #0052a3;
+}
+
+.habit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.habit-item input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+}
+
+.habit-item button {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+}
+
+.habit-item button:hover {
+  color: #ff6b6b;
+}
+
+.add-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.add-row input {
+  flex: 1;
+}
+
+.add-row button {
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ══ PREVIEW AREA ══ */
+#preview-container {
+  margin-left: 300px;
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+#preview-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#preview-header h2 {
+  font-size: 16px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+#preview-header .info {
+  font-size: 12px;
+  color: #666;
+}
+
+#sticker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+/* ══ THERMAL STICKER ══ */
+.thermal-sticker {
+  background: white;
+  color: black;
+  padding: 15px;
+  border: 2px dashed #666;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.sticker-label {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 11px;
+  color: #888;
+}
+
+/* Sticker content styles */
+.sticker-content h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  text-align: center;
+  border-bottom: 2px solid black;
+  padding-bottom: 4px;
+}
+
+.habit-list {
+  margin-top: 8px;
+}
+
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 10px;
+}
+
+.checkbox {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid black;
+  flex-shrink: 0;
+}
+
+.checkbox.circle {
+  border-radius: 50%;
+}
+
+.checkbox.rounded {
+  border-radius: 3px;
+}
+
+.todo-line {
+  border-bottom: 1px solid black;
+  flex: 1;
+  margin-left: 4px;
+}
+
+.date-header {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding: 6px;
+  border: 2px solid black;
+}
+
+.day-name {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.day-number {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.dotted-section {
+  margin: 8px 0;
+  min-height: 40px;
+  background-image:
+    radial-gradient(circle, black 0.5px, transparent 0.5px);
+  background-size: 4mm 4mm;
+  background-position: 0 0;
+}
+
+.label-field {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.label-value {
+  border-bottom: 1.5px solid black;
+  min-height: 16px;
+  margin-bottom: 8px;
+}
+
+/* Export controls */
+#export-controls {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+}
+
+.export-btn {
+  background: #2a7f2a;
+}
+
+.export-btn:hover {
+  background: #236623;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  #sidebar {
+    width: 100%;
+    position: relative;
+    height: auto;
+  }
+  #preview-container {
+    margin-left: 0;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+  }
+  #sidebar, #preview-header, .sticker-label {
+    display: none;
+  }
+  #preview-container {
+    margin: 0;
+    padding: 0;
+  }
+  .thermal-sticker {
+    border: 1px solid black;
+    box-shadow: none;
+    page-break-after: always;
+    margin: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebar">
+  <h1>D20 Thermal Sticker Generator</h1>
+  <p class="subtitle">Create black & white stickers optimized for 57mm thermal printers</p>
+
+  <!-- Sticker Type -->
+  <div class="section">
+    <h3>Sticker Type</h3>
+    <div class="control-row">
+      <select id="stickerType" onchange="updatePreview()">
+        <option value="habit-tracker">Daily Habit Tracker</option>
+        <option value="todo-list">To-Do List</option>
+        <option value="date-stamp">Date Stamp</option>
+        <option value="weekly-habits">Weekly Habit Grid</option>
+        <option value="blank-label">Blank Label</option>
+        <option value="checklist">Numbered Checklist</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Dimensions -->
+  <div class="section">
+    <h3>Dimensions</h3>
+    <div class="control-row">
+      <label>Width (mm)</label>
+      <input type="number" id="stickerWidth" value="57" readonly style="background:#333;cursor:not-allowed;">
+    </div>
+    <div class="control-row">
+      <label>Height (mm)</label>
+      <input type="number" id="stickerHeight" value="40" min="20" max="200" step="5" onchange="updatePreview()">
+    </div>
+    <div style="font-size:10px;color:#666;margin-top:4px;">
+      Width fixed at 57mm for thermal paper. Adjust height as needed.
+    </div>
+  </div>
+
+  <!-- Content Settings -->
+  <div class="section">
+    <h3>Content</h3>
+
+    <div class="control-row">
+      <label>Title</label>
+      <input type="text" id="stickerTitle" placeholder="Daily Habits" onchange="updatePreview()">
+    </div>
+
+    <div class="control-row">
+      <label>Checkbox Style</label>
+      <select id="checkboxStyle" onchange="updatePreview()">
+        <option value="square">Square</option>
+        <option value="circle">Circle</option>
+        <option value="rounded">Rounded</option>
+      </select>
+    </div>
+
+    <div class="control-row">
+      <label>Font Size</label>
+      <select id="fontSize" onchange="updatePreview()">
+        <option value="small">Small (9pt)</option>
+        <option value="medium" selected>Medium (10pt)</option>
+        <option value="large">Large (12pt)</option>
+      </select>
+    </div>
+
+    <div id="habitSection">
+      <h3 style="margin-top:16px;margin-bottom:8px;">Habits/Items</h3>
+      <div id="habitList"></div>
+      <div class="add-row">
+        <input type="text" id="newHabit" placeholder="Add item...">
+        <button onclick="addHabit()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Settings (for date stamps) -->
+  <div class="section" id="dateSection" style="display:none;">
+    <h3>Date</h3>
+    <div class="control-row">
+      <label>Month</label>
+      <select id="dateMonth">
+        <option value="0">January</option>
+        <option value="1">February</option>
+        <option value="2">March</option>
+        <option value="3">April</option>
+        <option value="4">May</option>
+        <option value="5">June</option>
+        <option value="6">July</option>
+        <option value="7">August</option>
+        <option value="8">September</option>
+        <option value="9">October</option>
+        <option value="10">November</option>
+        <option value="11">December</option>
+      </select>
+    </div>
+    <div class="control-row">
+      <label>Day</label>
+      <input type="number" id="dateDay" value="1" min="1" max="31" onchange="updatePreview()">
+    </div>
+    <div class="control-row">
+      <label>Year</label>
+      <input type="number" id="dateYear" value="2026" min="2020" max="2099" onchange="updatePreview()">
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="section">
+    <button class="btn btn-primary" onclick="updatePreview()">⟳ Refresh Preview</button>
+    <button class="btn" onclick="downloadSticker()">⬇ Download PNG</button>
+    <button class="btn" onclick="window.print()">🖨 Print</button>
+  </div>
+
+  <!-- Export Settings -->
+  <div id="export-controls">
+    <h3>Batch Export</h3>
+    <div class="control-row">
+      <label>Quantity</label>
+      <input type="number" id="batchCount" value="1" min="1" max="50">
+    </div>
+    <button class="btn export-btn" onclick="exportBatch()">Export Batch</button>
+    <div style="font-size:10px;color:#666;margin-top:8px;">
+      Creates multiple copies for printing
+    </div>
+  </div>
+</div>
+
+<!-- ══ PREVIEW ══ -->
+<div id="preview-container">
+  <div id="preview-header">
+    <h2>Preview</h2>
+    <p class="info">57mm × <span id="heightDisplay">40</span>mm • Black & White Thermal</p>
+  </div>
+
+  <div id="sticker-grid">
+    <!-- Stickers will be generated here -->
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// State
+let habits = ['Water 8 glasses', 'Exercise 30min', 'Read 20 pages', 'Meditate'];
+const THERMAL_WIDTH_MM = 57;
+const MM_TO_PX = 3.7795275591; // 96 DPI conversion
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('dateMonth').value = now.getMonth();
+  document.getElementById('dateDay').value = now.getDate();
+  document.getElementById('dateYear').value = now.getFullYear();
+  renderHabitList();
+  updatePreview();
+});
+
+// Habit management
+function renderHabitList() {
+  const list = document.getElementById('habitList');
+  list.innerHTML = habits.map((h, i) => `
+    <div class="habit-item">
+      <input type="text" value="${h}" onchange="updateHabit(${i}, this.value)">
+      <button onclick="removeHabit(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function addHabit() {
+  const input = document.getElementById('newHabit');
+  if (input.value.trim()) {
+    habits.push(input.value.trim());
+    input.value = '';
+    renderHabitList();
+    updatePreview();
+  }
+}
+
+function updateHabit(index, value) {
+  habits[index] = value;
+  updatePreview();
+}
+
+function removeHabit(index) {
+  habits.splice(index, 1);
+  renderHabitList();
+  updatePreview();
+}
+
+// Preview generation
+function updatePreview() {
+  const type = document.getElementById('stickerType').value;
+  const height = parseInt(document.getElementById('stickerHeight').value);
+  document.getElementById('heightDisplay').textContent = height;
+
+  // Show/hide sections based on type
+  document.getElementById('habitSection').style.display =
+    ['habit-tracker', 'todo-list', 'checklist', 'weekly-habits'].includes(type) ? 'block' : 'none';
+  document.getElementById('dateSection').style.display =
+    type === 'date-stamp' ? 'block' : 'none';
+
+  const grid = document.getElementById('sticker-grid');
+  grid.innerHTML = '';
+
+  // Create sticker
+  const sticker = createSticker(type, height);
+  grid.appendChild(sticker);
+}
+
+function createSticker(type, heightMm) {
+  const widthPx = THERMAL_WIDTH_MM * MM_TO_PX;
+  const heightPx = heightMm * MM_TO_PX;
+
+  const container = document.createElement('div');
+  container.className = 'thermal-sticker';
+  container.style.width = widthPx + 'px';
+  container.style.height = heightPx + 'px';
+  container.id = 'exportSticker';
+
+  const label = document.createElement('div');
+  label.className = 'sticker-label';
+  label.textContent = `${THERMAL_WIDTH_MM}mm × ${heightMm}mm`;
+  container.appendChild(label);
+
+  const content = document.createElement('div');
+  content.className = 'sticker-content';
+
+  switch(type) {
+    case 'habit-tracker':
+      content.innerHTML = generateHabitTracker();
+      break;
+    case 'todo-list':
+      content.innerHTML = generateTodoList();
+      break;
+    case 'date-stamp':
+      content.innerHTML = generateDateStamp();
+      break;
+    case 'weekly-habits':
+      content.innerHTML = generateWeeklyHabits();
+      break;
+    case 'checklist':
+      content.innerHTML = generateChecklist();
+      break;
+    case 'blank-label':
+      content.innerHTML = generateBlankLabel();
+      break;
+  }
+
+  container.appendChild(content);
+  return container;
+}
+
+function generateHabitTracker() {
+  const title = document.getElementById('stickerTitle').value || 'Daily Habits';
+  const checkboxStyle = document.getElementById('checkboxStyle').value;
+
+  let html = `<h3>${title}</h3><div class="habit-list">`;
+
+  habits.forEach(habit => {
+    html += `
+      <div class="habit-row">
+        <div class="checkbox ${checkboxStyle}"></div>
+        <span>${habit}</span>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function generateTodoList() {
+  const title = document.getElementById('stickerTitle').value || 'To-Do';
+  const checkboxStyle = document.getElementById('checkboxStyle').value;
+
+  let html = `<h3>${title}</h3><div class="habit-list">`;
+
+  habits.forEach(habit => {
+    html += `
+      <div class="habit-row">
+        <div class="checkbox ${checkboxStyle}"></div>
+        <div class="todo-line"></div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function generateDateStamp() {
+  const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+  const month = parseInt(document.getElementById('dateMonth').value);
+  const day = parseInt(document.getElementById('dateDay').value);
+  const year = parseInt(document.getElementById('dateYear').value);
+
+  const date = new Date(year, month, day);
+  const dayName = dayNames[date.getDay()];
+
+  return `
+    <div class="date-header">
+      <div class="day-name">${dayName}</div>
+      <div class="day-number">${day}</div>
+      <div class="day-name">${monthNames[month]} ${year}</div>
+    </div>
+    <div class="dotted-section"></div>
+  `;
+}
+
+function generateWeeklyHabits() {
+  const title = document.getElementById('stickerTitle').value || 'Weekly Tracker';
+  const checkboxStyle = document.getElementById('checkboxStyle').value;
+  const days = ['M','T','W','T','F','S','S'];
+
+  let html = `<h3>${title}</h3><div style="font-size:9px;">`;
+
+  habits.slice(0, 4).forEach(habit => {
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-weight:bold;margin-bottom:2px;">${habit}</div>
+      <div style="display:flex;gap:3px;">`;
+
+    days.forEach(d => {
+      html += `<div style="text-align:center;">
+        <div style="font-size:7px;">${d}</div>
+        <div class="checkbox ${checkboxStyle}" style="width:10px;height:10px;margin:2px auto;"></div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function generateChecklist() {
+  const title = document.getElementById('stickerTitle').value || 'Checklist';
+
+  let html = `<h3>${title}</h3><div class="habit-list">`;
+
+  for (let i = 1; i <= 8; i++) {
+    html += `
+      <div class="habit-row">
+        <span style="font-weight:bold;margin-right:4px;">${i}.</span>
+        <div class="todo-line"></div>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function generateBlankLabel() {
+  const title = document.getElementById('stickerTitle').value || 'Label';
+
+  return `
+    <h3>${title}</h3>
+    <div class="dotted-section" style="flex:1;"></div>
+  `;
+}
+
+// Download single sticker as PNG
+function downloadSticker() {
+  const sticker = document.getElementById('exportSticker');
+  if (!sticker) return;
+
+  // Use html2canvas or similar library in production
+  // For now, print instruction
+  alert('To save as PNG:\n1. Use browser Print function\n2. Select "Save as PDF"\n3. Convert PDF to PNG using online tool\n\nOr use screenshot tool to capture the sticker preview.');
+}
+
+// Export batch
+function exportBatch() {
+  const count = parseInt(document.getElementById('batchCount').value);
+  const grid = document.getElementById('sticker-grid');
+  const type = document.getElementById('stickerType').value;
+  const height = parseInt(document.getElementById('stickerHeight').value);
+
+  grid.innerHTML = '';
+
+  for (let i = 0; i < count; i++) {
+    const sticker = createSticker(type, height);
+    grid.appendChild(sticker);
+  }
+
+  setTimeout(() => {
+    alert(`Generated ${count} stickers. Use Print/PDF to export.`);
+  }, 100);
+}
+</script>
+
+</body>
+</html>
