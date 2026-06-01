@@ -15,3 +15,8 @@ Thumbs.db
 
 # Node modules (if needed later)
 node_modules/
+
+# Development files
+.dual-graph/
+.claude/
+CLAUDE.md
