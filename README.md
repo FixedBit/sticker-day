@@ -40,3 +40,4 @@ GNU General Public License v3.0
 ## Credits
 
 Adapted from the Traveler's Notebook Insert Generator for thermal sticker printing.
+
