@@ -20,3 +20,4 @@ node_modules/
 .dual-graph/
 .claude/
 CLAUDE.md
+tn-insert-generator/
