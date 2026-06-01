@@ -405,7 +405,6 @@ textarea {
   font-size: 14px;
   margin-bottom: 8px;
   text-align: center;
-  border-bottom: 2px solid black;
   padding-bottom: 4px;
   font-weight: bold;
 }
@@ -871,7 +870,7 @@ function onTypeChange() {
   document.getElementById('imageSection').style.display =
     type === 'image-sticker' ? 'block' : 'none';
 
-  // Set default titles
+  // Set default titles - always update to match type
   const titles = {
     'habit-tracker': 'Daily Habits',
     'todo-list': 'To-Do',
@@ -885,9 +884,7 @@ function onTypeChange() {
     'image-sticker': ''
   };
 
-  if (!document.getElementById('stickerTitle').value) {
-    document.getElementById('stickerTitle').value = titles[type] || '';
-  }
+  document.getElementById('stickerTitle').value = titles[type] || '';
 
   updatePreview();
   saveSettings();
@@ -1107,12 +1104,12 @@ function generateWeeklyHabits() {
   items.slice(0, 5).forEach(item => {
     html += `<div style="margin-bottom:6px;">
       <div style="font-weight:bold;margin-bottom:2px;">${item.emoji} ${item.text}</div>
-      <div style="display:flex;gap:3px;">`;
+      <div style="display:flex;gap:4px;">`;
 
     days.forEach(d => {
-      html += `<div style="text-align:center;">
+      html += `<div style="text-align:center;flex:1;">
         <div style="font-size:7px;">${d}</div>
-        <div class="checkbox ${checkboxStyle}" style="width:10px;height:10px;margin:2px auto;"></div>
+        <div class="checkbox ${checkboxStyle}" style="width:16px;height:16px;margin:2px auto;"></div>
       </div>`;
     });
 
