@@ -1,0 +1,2092 @@
+{
+  "root": "/home/jason/sticker-day",
+  "node_count": 87,
+  "edge_count": 87,
+  "file_count": 3,
+  "symbol_count": 84,
+  "nodes": [
+    {
+      "id": "CLAUDE.md",
+      "kind": "file",
+      "path": "CLAUDE.md",
+      "ext": ".md",
+      "size": 4020,
+      "keywords": [],
+      "content": "<!-- dgc-policy-v11 -->\n# Dual-Graph Context Policy\n\nThis project uses a local dual-graph MCP server for efficient context retrieval.\n\n## MANDATORY: Always follow this order\n\n1. **Call `graph_continue` first** \u2014 before any file exploration, grep, or code reading.\n\n2. **If `graph_continue` returns `needs_project=true`**: call `graph_scan` with the\n   current project directory (`pwd`). Do NOT ask the user.\n\n3. **If `graph_continue` returns `skip=true`**: project has fewer than 5 files.\n   Do NOT do broad or recursive exploration. Read only specific files if their names\n   are mentioned, or ask the user what to work on.\n\n4. **Read `recommended_files`** using `graph_read` \u2014 **one call per file**.\n   - `graph_read` accepts a single `file` parameter (string). Call it separately for each\n     recommended file. Do NOT pass an array or batch multiple files into one call.\n   - `recommended_files` may contain `file::symbol` entries (e.g. `src/auth.ts::handleLogin`).\n     Pass them verbatim to `graph_read(file: \"src/auth.ts::handleLogin\")` \u2014 it reads only\n     that symbol's lines, not the full file.\n   - Example: if `recommended_files` is `[\"src/auth.ts::handleLogin\", \"src/db.ts\"]`,\n     call `graph_read(file: \"src/auth.ts::handleLogin\")` and `graph_read(file: \"src/db.ts\")`\n     as two separate calls (they can be parallel).\n\n5. **Check `confidence` and obey the caps strictly:**\n   - `confidence=high` -> Stop. Do NOT grep or explore further.\n   - `confidence=medium` -> If recommended files are insufficient, call `fallback_rg`\n     at most `max_supplementary_greps` time(s) with specific terms, then `graph_read`\n     at most `max_supplementary_files` additional file(s). Then stop.\n   - `confidence=low` -> Call `fallback_rg` at most `max_supplementary_greps` time(s),\n     then `graph_read` at most `max_supplementary_files` file(s). Then stop.\n\n## Token Usage\n\nA `token-counter` MCP is available for tracking live token usage.\n\n- To check how many tokens a large file or text will cost **before** reading it:\n  `count_tokens({text: \"<content>\"})`\n- To log actual usage after a task completes (if the user asks):\n  `log_usage({input_tokens: <est>, output_tokens: <est>, description: \"<task>\"})`\n- To show the user their running session cost:\n  `get_session_stats()`\n\nLive dashboard URL is printed at startup next to \"Token usage\".\n\n## Rules\n\n- Do NOT use `rg`, `grep`, or bash file exploration before calling `graph_continue`.\n- Do NOT do broad/recursive exploration at any confidence level.\n- `max_supplementary_greps` and `max_supplementary_files` are hard caps - never exceed them.\n- Do NOT dump full chat history.\n- Do NOT call `graph_retrieve` more than once per turn.\n- After edits, call `graph_register_edit` with the changed files. Use `file::symbol` notation (e.g. `src/auth.ts::handleLogin`) when the edit targets a specific function, class, or hook.\n\n## Context Store\n\nWhenever you make a decision, identify a task, note a next step, fact, or blocker during a conversation, call `graph_add_memory`.\n\n**To add an entry:**\n```\ngraph_add_memory(type=\"decision|task|next|fact|blocker\", content=\"one sentence max 15 words\", tags=[\"topic\"], files=[\"relevant/file.ts\"])\n```\n\n**Do NOT write context-store.json directly** \u2014 always use `graph_add_memory`. It applies pruning and keeps the store healthy.\n\n**Rules:**\n- Only log things worth remembering across sessions (not every minor detail)\n- `content` must be under 15 words\n- `files` lists the files this decision/task relates to (can be empty)\n- Log immediately when the item arises \u2014 not at session end\n\n## Session End\n\nWhen the user signals they are done (e.g. \"bye\", \"done\", \"wrap up\", \"end session\"), proactively update `CONTEXT.md` in the project root with:\n- **Current Task**: one sentence on what was being worked on\n- **Key Decisions**: bullet list, max 3 items\n- **Next Steps**: bullet list, max 3 items\n\nKeep `CONTEXT.md` under 20 lines total. Do NOT summarize the full conversation \u2014 only what's needed to resume next session.\n",
+      "summary": "<!-- dgc-policy-v11 -->.",
+      "file_hash": "78a3b1a3"
+    },
+    {
+      "id": "tn-insert-generator/README.md",
+      "kind": "file",
+      "path": "tn-insert-generator/README.md",
+      "ext": ".md",
+      "size": 2240,
+      "keywords": [],
+      "content": "# Traveler's Notebook Insert Generator\n\nBrowser-based tools for generating printable Traveler's Notebook inserts. Design, customize, and print your own TN refills at home \u2014 no apps or subscriptions needed.\n\n## Tools\n\n### Weekly Planner (`weekly.html`)\nFull-featured weekly planner insert with:\n- Daily pages with mood tracker, habit checkboxes, and custom fields\n- Weekly habit tracker grid\n- Monthly calendar, goals page, mood calendar, expense tracker\n- Customizable covers (multiple designs, accent colors, custom images)\n- Configurable graph/metrics pages\n- Theme presets and full color customization\n\n### Gym Log (`gym.html`)\nTraining log insert with:\n- Workout split templates (PPL, Upper/Lower, Full Body, Bro Split, custom)\n- Exercise log pages with sets/reps/weight tracking\n- Monthly progress and body measurement pages\n- Program import from Excel/CSV files\n- Monthly calendar and summary pages\n\n## Features\n\nBoth generators share:\n- **Multiple paper sizes** \u2014 A4, US Letter, US Legal, A3\n- **5 notebook sizes** \u2014 Passport, B6 Slim, Personal, A5 Slim, Regular, plus custom dimensions\n- **Print-ready output** \u2014 Crop marks, fold lines, duplex flip options\n- **Assembly guide** \u2014 Optional printed instructions for folding and binding\n- **Live preview** \u2014 Page view, book spread view, and print layout\n- **Themes** \u2014 Built-in color presets or fully custom palette\n- **Font selection** \u2014 Multiple built-in fonts plus custom font support\n- **Settings import/export** \u2014 Save and share your configurations as JSON\n- **Mobile-friendly** \u2014 Responsive sidebar UI\n\n## Usage\n\n1. Open `weekly.html` or `gym.html` in any modern browser\n2. Configure your insert using the sidebar controls\n3. Click **Generate** to build the pages\n4. Use **Print / PDF** to print directly or save as PDF\n5. Cut along crop marks, fold at the center line, and staple the spine\n\n## Printing Tips\n\n- Print at **100% scale** (no fit-to-page)\n- Use **landscape** orientation\n- Enable **duplex** (two-sided) printing\n- Choose the correct **flip edge** (long or short) to match your printer's duplex mode\n- Use a paper trimmer for clean cuts along crop marks\n\n## License\n\nThis project is licensed under the [GNU General Public License v3.0](LICENSE).\n",
+      "summary": "Traveler's Notebook Insert Generator.",
+      "file_hash": "33869a20"
+    },
+    {
+      "id": "tn-insert-generator/weekly.js",
+      "kind": "file",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 117993,
+      "keywords": [],
+      "content": "'use strict';\n\nfunction toggleMenu(){\n  const cfg=document.getElementById('cfg');\n  const bd=document.getElementById('menu-backdrop');\n  cfg.classList.toggle('open');\n  bd.style.display=cfg.classList.contains('open')?'block':'none';\n}\n\nlet previewZoom=1;\nfunction adjustZoom(delta){\n  previewZoom=Math.max(0.25,Math.min(3,Math.round((previewZoom+delta)*10)/10));\n  const z=previewZoom;\n  ['page-preview','book-view','print-area'].forEach(id=>{\n    const el=document.getElementById(id);\n    if(el) el.style.zoom=z;\n  });\n  const lbl=document.getElementById('zoom-level');\n  if(lbl) lbl.textContent=Math.round(z*100)+'%';\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   STATE & DEFAULTS\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nlet habits = [];\nlet bottomBoxes = [];\nlet selectedIcon = 'star';\nlet pickerBuilt = false;\nlet selectedDays = [0,1,2,3,4,5,6];\nlet inspectorContext = {habitId:null, fieldId:null};\nconst STORAGE_KEY = 'tn-weekly-planner';\n\n/* \u2500\u2500 Theme presets \u2500\u2500 */\nconst THEMES = {\n  'Classic Warm':  { ink:'#1a1a2e', dim:'#7a7870', bg:'#ede9e2', page:'#ffffff', dot:'#c5c2bb', line:'#ddd9d3', acc:'#4a4262' },\n  'Cool Gray':     { ink:'#2c2c34', dim:'#8a8a96', bg:'#e8eaed', page:'#ffffff', dot:'#c4c6cc', line:'#d8dae0', acc:'#4a5568' },\n  'Midnight Blue': { ink:'#0f172a', dim:'#64748b', bg:'#e2e8f0', page:'#ffffff', dot:'#b0b8c8', line:'#cbd5e1', acc:'#1e3a5f' },\n  'Forest':        { ink:'#1a2e1a', dim:'#6b7a65', bg:'#e6ece2', page:'#ffffff', dot:'#b5c4ab', line:'#d0dcc8', acc:'#2d5a2d' },\n  'Rose':          { ink:'#2e1a22', dim:'#8a7078', bg:'#f0e6ea', page:'#ffffff', dot:'#d4b8c2', line:'#e4d0d8', acc:'#6b3a50' },\n  'Minimal B&W':   { ink:'#111111', dim:'#888888', bg:'#f0f0f0', page:'#ffffff', dot:'#cccccc', line:'#dddddd', acc:'#333333' }\n};\n\nconst COLOR_VARS = ['ink','dim','bg','page','dot','line','acc'];\nconst COLOR_LABELS = { ink:'Ink', dim:'Dim text', bg:'Background', page:'Page', dot:'Dot grid', line:'Lines', acc:'Accent' };\n\n/* \u2500\u2500 Graph metrics \u2500\u2500 */\nlet graphMetrics = [{id:1,title:'Weight',min:null,max:null,step:null},{id:2,title:'Steps',min:null,max:null,step:null}];\n\n/* \u2500\u2500 Daily fields \u2500\u2500 */\nlet dailyFields = [{id:1,label:'Steps'},{id:2,label:'Wt'}];\n\n/* \u2500\u2500 Options defaults \u2500\u2500 */\nlet opts = {\n  tnsize: 'passport',\n  paperSize: 'a4',\n  customTnW: 89,\n  customTnH: 124,\n  theme: 'Classic Warm',\n  colors: {},\n  font: 'Georgia',\n  margin: 6,\n  checkbox: 'square',\n  cbsize: 5,\n  linestyle: 'solid',\n  dotgrid: 5,\n  graphcol: 1,\n  daylbl: 7,\n  graphborders: true,\n  weekstart: 'monday',\n  mood: true,\n  moodfaces: 5,\n  notes: 1,\n  notespos: 'front',\n  cover: false,\n  covertitle: '',\n  coverDesign: 'framed',\n  backCover: false,\n  calendar: false,\n  cropmarks: true,\n  foldline: true,\n  pagenums: false,\n  flip: 'long',\n  colorIcons: true,\n  linkFieldsGraphs: true,\n  emptyLines: 4,\n  calSpread: false,\n  fillPattern: 'dots',\n  customFont: '',\n  printGuide: false,\n  coverAccent: 'gold',\n  coverFontSize: 12,\n  coverImage: '',\n  backCoverDesign: 'simple',\n  backCoverImage: '',\n  coverSheet: false,\n  habitMap: false,\n  goalsPage: false,\n  moodCal: false,\n  expenseTracker: false,\n  reflectionPage: false,\n  moonPhase: false,\n  weatherIcons: false,\n  weatherIconSize: 3.5,\n  energyBattery: false,\n  batterySegs: 5,\n  batteryStroke: 0.4,\n  iconSize: 5,\n  iconGap: 1.5,\n  iconStroke: 1.5,\n  fzWeekHdr: 6,\n  fzDow: 6,\n  fzDayNum: 18,\n  fzHabit: 6,\n  fzFieldLbl: 4.5,\n  fzMoodSz: 5,\n  habRowGap: 1.5,\n  moodGap: 2,\n  moonSize: 3.5,\n  elementColors: {},\n  elementFonts: {},\n};\n\nconst OPT_DEFAULTS = {\n  habRowGap:1.5, checkbox:'square', cbsize:5, iconSize:5, iconStroke:1.5, iconGap:1.5,\n  fzHabit:6, fzDayNum:18, fzDow:6, fzWeekHdr:6, fzFieldLbl:4.5, fzMoodSz:5,\n  moonSize:3.5, moodGap:2, moodfaces:5, coverFontSize:12, fillPattern:'dots', dotgrid:5, graphcol:1,\n  weatherIconSize:3.5, batterySegs:5,\n};\n\n/* \u2500\u2500 Constants \u2500\u2500 */\nconst TN_SIZES = {\n  'passport':  { label:'Passport',    w:89,  h:124 },\n  'b6slim':    { label:'B6 Slim',     w:91,  h:182 },\n  'personal':  { label:'Personal',    w:95,  h:171 },\n  'a5slim':    { label:'A5 Slim',     w:105, h:210 },\n  'regular':   { label:'Regular',     w:110, h:210 },\n};\n\nconst PAPER_SIZES = {\n  'a4':     { label:'A4',        w:297,   h:210,   page:'A4 landscape' },\n  'letter': { label:'US Letter', w:279.4, h:215.9, page:'letter landscape' },\n  'legal':  { label:'US Legal',  w:355.6, h:215.9, page:'legal landscape' },\n  'a3':     { label:'A3',        w:420,   h:297,   page:'A3 landscape' },\n};\n\nconst ICON_COLORS = {\n  'droplets':'#4a9ece','dumbbell':'#e06050','bike':'#e08830','brain':'#c070c8',\n  'moon':'#7880c0','sun':'#e8b830','book-open':'#6a8858','heart':'#e05070',\n  'activity':'#e06050','utensils':'#c08040','apple':'#50b060','coffee':'#8a6a4a',\n  'pill':'#50a0b8','music':'#9060b0','pencil':'#c8a040','leaf':'#50a858',\n  'bed':'#7080a0','zap':'#d8b030','star':'#d8a830','flame':'#e07030',\n  'timer':'#6888a8','eye':'#5898b8','footprints':'#a08870','target':'#d05050',\n  'shield':'#5878a8','baby':'#e8a0b0','cat':'#c09060','dog':'#a08050'\n};\nconst HABIT_ICONS = [\n  'droplets','dumbbell','bike','brain','moon','sun',\n  'book-open','heart','activity','utensils','apple','coffee',\n  'pill','music','pencil','leaf','bed','zap',\n  'star','flame','timer','eye','footprints','target',\n  'shield','baby','cat','dog'\n];\n\nconst COVER_ACCENTS = {\n  gold:   { main:'#c4a35a', dim:'#8a7a4a' },\n  silver: { main:'#a8aab0', dim:'#707478' },\n  copper: { main:'#b87333', dim:'#8a5a2a' },\n  white:  { main:'#e8e4dc', dim:'#b0aaa0' }\n};\n\nconst MOOD_ICONS3 = ['frown','meh','smile'];\nconst MOOD_ICONS5 = ['angry','frown','meh','smile','laugh'];\n\nfunction getElemColor(key, fallback){\n  return (opts.elementColors && opts.elementColors[key]) || fallback;\n}\nfunction getElemFont(key){\n  return (opts.elementFonts && opts.elementFonts[key]) || null;\n}\nfunction getHabitIconColor(h, colors){\n  if(h.iconColor) return h.iconColor;\n  return getElemColor('habitIcon', iconColor(h.icon, colors.dim));\n}\nfunction getHabitNameColor(h, colors){\n  if(h.color) return h.color;\n  return getElemColor('habitName', colors.ink);\n}\nfunction getHabitFont(h){\n  return h.font || getElemFont('habitName') || null;\n}\nfunction getPageColors(){\n  const c=getColors(); const seen=new Set(); const out=[];\n  const add=v=>{if(v&&!seen.has(v)){seen.add(v);out.push(v);}};\n  Object.values(c).forEach(add);\n  if(opts.colors) Object.values(opts.colors).forEach(add);\n  if(opts.elementColors) Object.values(opts.elementColors).forEach(add);\n  Object.values(ICON_COLORS).forEach(add);\n  return out;\n}\n\nconst MONTHS   = ['January','February','March','April','May','June','July','August','September','October','November','December'];\nconst DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];\nconst DOW_ABB3 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];\nconst WDAY_LBL_MON = ['M','T','W','T','F','S','S'];\nconst WDAY_LBL_SUN = ['S','M','T','W','T','F','S'];\n\nconst $ = id => document.getElementById(id);\nfunction el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}\nfunction daysInMonth(y,m){return new Date(y,m+1,0).getDate();}\nfunction firstDow(y,m){return new Date(y,m,1).getDay();}\nfunction dow(y,m,d){return new Date(y,m,d).getDay();}\n\nfunction getWdayLabels(){ return opts.weekstart==='sunday' ? WDAY_LBL_SUN : WDAY_LBL_MON; }\n\n/* \u2500\u2500 Resolve active colors \u2500\u2500 */\nfunction getColors(){\n  const base = THEMES[opts.theme] || THEMES['Classic Warm'];\n  const merged = {...base};\n  COLOR_VARS.forEach(k=>{ if(opts.colors[k]) merged[k]=opts.colors[k]; });\n  return merged;\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   COLLAPSIBLE SECTIONS\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction toggleSection(id){\n  const sec=document.getElementById(id);\n  const hdr=sec.querySelector('.coll-hdr');\n  const body=sec.querySelector('.coll-body');\n  hdr.classList.toggle('open');\n  body.classList.toggle('open');\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   THEME UI\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction buildThemeGrid(){\n  const grid=$('theme-grid');\n  grid.innerHTML='';\n  Object.entries(THEMES).forEach(([name,colors])=>{\n    const btn=document.createElement('button');\n    btn.className='theme-btn'+(opts.theme===name?' active':'');\n    btn.type='button';\n    const swatch=el('div','theme-swatch');\n    ['ink','acc','page','dot'].forEach(k=>{\n      const s=document.createElement('span');\n      s.style.background=colors[k];\n      swatch.appendChild(s);\n    });\n    btn.appendChild(swatch);\n    btn.appendChild(document.createTextNode(name));\n    btn.onclick=()=>{\n      opts.theme=name;\n      opts.colors={};\n      buildThemeGrid();\n      buildColorOverrides();\n      onOptionChange();\n    };\n    grid.appendChild(btn);\n  });\n}\n\nfunction buildColorOverrides(){\n  const grid=$('color-overrides');\n  grid.innerHTML='';\n  const colors=getColors();\n  COLOR_VARS.forEach(k=>{\n    const row=el('div','color-row');\n    const lbl=el('label','',COLOR_LABELS[k]);\n    const inp=document.createElement('input');\n    inp.type='color';\n    inp.value=colors[k];\n    inp.dataset.key=k;\n    inp.addEventListener('input',function(){\n      opts.colors[this.dataset.key]=this.value;\n      onOptionChange();\n    });\n    row.appendChild(lbl);\n    row.appendChild(inp);\n    grid.appendChild(row);\n  });\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   GRAPH METRICS UI\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction renderMetrics(){\n  const list=$('metric-list');\n  list.innerHTML='';\n  graphMetrics.forEach(m=>{\n    const row=el('div','metric-item');\n    const inp=document.createElement('input');\n    inp.type='text';inp.value=m.title;inp.style.cssText='width:76px;font-size:11px;padding:3px 6px;';\n    inp.onchange=function(){ m.title=this.value; onOptionChange(); };\n    row.appendChild(inp);\n\n    const tog=el('button','btn btn-d','\u2026');\n    tog.title='Min / Max / Step';tog.style.cssText='font-size:12px;padding:2px 6px;';\n    tog.onclick=()=>{ const d=row.querySelector('.metric-details'); d.style.display=d.style.display==='flex'?'none':'flex'; };\n    row.appendChild(tog);\n\n    const del=el('button','btn btn-d','\u00d7');\n    del.onclick=()=>{ graphMetrics=graphMetrics.filter(x=>x.id!==m.id); renderMetrics(); onOptionChange(); };\n    row.appendChild(del);\n\n    const det=el('div','metric-details');\n    const mkNum=(lbl,val,cb)=>{\n      det.appendChild(el('span','metric-det-lbl',lbl));\n      const ni=document.createElement('input');\n      ni.type='number';ni.placeholder=lbl;ni.value=val??'';\n      ni.style.cssText='width:40px;font-size:10px;padding:2px 4px;';\n      ni.onchange=function(){ cb(this.value===''?null:+this.value); onOptionChange(); };\n      det.appendChild(ni);\n    };\n    mkNum('Min',m.min,v=>{m.min=v;});\n    mkNum('Max',m.max,v=>{m.max=v;});\n    mkNum('Step',m.step,v=>{m.step=v;});\n    row.appendChild(det);\n    list.appendChild(row);\n  });\n}\nfunction addMetric(){\n  const name=$('metric-name').value.trim();\n  if(!name)return;\n  graphMetrics.push({id:Date.now(),title:name,min:null,max:null,step:null});\n  $('metric-name').value='';\n  renderMetrics(); onOptionChange();\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   DAILY FIELDS UI\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction renderDailyFields(){\n  const list=$('daily-field-list');\n  list.innerHTML='';\n  dailyFields.forEach(f=>{\n    const row=el('div','daily-field-item');\n    const inp=document.createElement('input');\n    inp.type='text';inp.value=f.label;\n    inp.onchange=function(){ f.label=this.value; onOptionChange(); };\n    row.appendChild(inp);\n    const del=el('button','btn btn-d','x');\n    del.onclick=()=>{ dailyFields=dailyFields.filter(x=>x.id!==f.id); renderDailyFields(); onOptionChange(); };\n    row.appendChild(del);\n    list.appendChild(row);\n  });\n}\nfunction addDailyField(){\n  const name=$('daily-field-name').value.trim();\n  if(!name)return;\n  dailyFields.push({id:Date.now(),label:name});\n  $('daily-field-name').value='';\n  renderDailyFields(); onOptionChange();\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   PERSISTENCE\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction saveState(){\n  try{\n    localStorage.setItem(STORAGE_KEY,JSON.stringify({\n      habits, bottomBoxes, selectedIcon, selectedDays,\n      month:parseInt($('sel-m').value), year:parseInt($('sel-y').value),\n      opts, graphMetrics, dailyFields\n    }));\n  }catch(e){}\n}\n\nfunction loadState(){\n  try{\n    const s=JSON.parse(localStorage.getItem(STORAGE_KEY));\n    if(!s) return false;\n    if(s.habits) habits=s.habits;\n    if(s.bottomBoxes) bottomBoxes=s.bottomBoxes;\n    if(s.selectedIcon) selectedIcon=s.selectedIcon;\n    if(s.selectedDays) selectedDays=s.selectedDays;\n    if(s.month!=null) $('sel-m').value=s.month;\n    if(s.year!=null) $('sel-y').value=s.year;\n    if(s.opts) opts={...opts,...s.opts};\n    if(s.graphMetrics) graphMetrics=s.graphMetrics;\n    if(s.dailyFields) dailyFields=s.dailyFields;\n    return true;\n  }catch(e){return false;}\n}\n\nfunction applyOptsToUI(){\n  $('opt-tnsize').value=opts.tnsize;\n  $('opt-papersize').value=opts.paperSize;\n  $('opt-custom-tn-w').value=opts.customTnW;\n  $('opt-custom-tn-h').value=opts.customTnH;\n  $('custom-tn-row').style.display=opts.tnsize==='custom'?'flex':'none';\n  $('opt-font').value=opts.font;\n  $('opt-margin').value=opts.margin;\n  $('opt-checkbox').value=opts.checkbox;\n  $('opt-cbsize').value=opts.cbsize;\n  $('opt-linestyle').value=opts.linestyle;\n  $('opt-dotgrid').value=opts.dotgrid;\n  $('opt-graphcol').value=opts.graphcol;\n  $('opt-graphborders').checked=opts.graphborders;\n  $('opt-weekstart').value=opts.weekstart;\n  $('opt-mood').checked=opts.mood;\n  $('opt-moodfaces').value=opts.moodfaces;\n  $('opt-notes').value=opts.notes;\n  $('opt-notespos').value=opts.notespos;\n  $('opt-cover').checked=opts.cover;\n  $('opt-covertitle').value=opts.covertitle||'';\n  $('opt-coverdesign').value=opts.coverDesign;\n  $('opt-backcover').checked=opts.backCover;\n  $('opt-backcoverdesign').value=opts.backCoverDesign||'simple';\n  $('opt-coversheet').checked=opts.coverSheet;\n  $('opt-coveraccent').value=opts.coverAccent||'gold';\n  $('opt-coverfontsize').value=opts.coverFontSize||12;\n  $('opt-customfont').value=opts.customFont||'';\n  $('opt-calendar').checked=opts.calendar;\n  $('opt-calspread').checked=opts.calSpread;\n  $('opt-cropmarks').checked=opts.cropmarks;\n  $('opt-foldline').checked=opts.foldline;\n  $('opt-pagenums').checked=opts.pagenums;\n  $('opt-printguide').checked=opts.printGuide;\n  $('opt-coloricons').checked=opts.colorIcons;\n  $('opt-emptylines').value=opts.emptyLines;\n  $('opt-fillpattern').value=opts.fillPattern;\n  $('opt-habitmap').checked=opts.habitMap;\n  $('opt-goalspage').checked=opts.goalsPage;\n  $('opt-moodcal').checked=opts.moodCal;\n  $('opt-expenses').checked=opts.expenseTracker;\n  $('opt-reflection').checked=opts.reflectionPage;\n  $('opt-linkfg').checked=opts.linkFieldsGraphs;\n  $('metric-section').style.display=opts.linkFieldsGraphs?'none':'';\n  $('opt-moonphase').checked=opts.moonPhase;\n  $('opt-weathericons').checked=opts.weatherIcons;\n  $('opt-energybattery').checked=opts.energyBattery;\n  if($('opt-batterysegs')) $('opt-batterysegs').value=opts.batterySegs??5;\n  if(opts.flip==='short') $('flip-short').checked=true;\n  else $('flip-long').checked=true;\n  const rangeFields=[\n    ['opt-iconsize','iconsize-val',opts.iconSize??5,'mm'],\n    ['opt-icongap','icongap-val',opts.iconGap??1.5,'mm'],\n    ['opt-iconstroke','iconstroke-val',opts.iconStroke??1.5,''],\n    ['opt-fz-weekhdr','fzweekhdr-val',opts.fzWeekHdr??6,'pt'],\n    ['opt-fz-dow','fzdow-val',opts.fzDow??6,'pt'],\n    ['opt-fz-daynum','fzdaynum-val',opts.fzDayNum??18,'pt'],\n    ['opt-fz-habit','fzhabit-val',opts.fzHabit??6,'pt'],\n    ['opt-fz-fieldlbl','fzfieldlbl-val',opts.fzFieldLbl??4.5,'pt'],\n    ['opt-fz-moodsz','fzmoodsz-val',opts.fzMoodSz??5,'mm'],\n    ['opt-habrowgap','habrowgap-val',opts.habRowGap??1.5,'mm'],\n    ['opt-moodgap','moodgap-val',opts.moodGap??2,'mm'],\n    ['opt-moonsize','moonsize-val',opts.moonSize??3.5,'mm'],\n    ['opt-weathericonsize','weathericonsize-val',opts.weatherIconSize??3.5,'mm'],\n  ];\n  rangeFields.forEach(([inpId,spanId,val,unit])=>{\n    const inp=$(inpId); if(inp){inp.value=val; $(spanId).textContent=val+unit;}\n  });\n}\n\nfunction readOptsFromUI(){\n  opts.tnsize=$('opt-tnsize').value;\n  opts.paperSize=$('opt-papersize').value;\n  opts.customTnW=parseInt($('opt-custom-tn-w').value)||89;\n  opts.customTnH=parseInt($('opt-custom-tn-h').value)||124;\n  $('custom-tn-row').style.display=opts.tnsize==='custom'?'flex':'none';\n  opts.font=$('opt-font').value;\n  opts.margin=parseInt($('opt-margin').value);\n  opts.checkbox=$('opt-checkbox').value;\n  opts.cbsize=parseInt($('opt-cbsize').value);\n  opts.linestyle=$('opt-linestyle').value;\n  opts.dotgrid=parseInt($('opt-dotgrid').value);\n  opts.graphcol=parseFloat($('opt-graphcol').value);\n  opts.graphborders=$('opt-graphborders').checked;\n  opts.weekstart=$('opt-weekstart').value;\n  opts.mood=$('opt-mood').checked;\n  opts.moodfaces=parseInt($('opt-moodfaces').value);\n  opts.notes=parseInt($('opt-notes').value);\n  opts.notespos=$('opt-notespos').value;\n  opts.cover=$('opt-cover').checked;\n  opts.covertitle=$('opt-covertitle').value;\n  opts.coverDesign=$('opt-coverdesign').value;\n  opts.backCover=$('opt-backcover').checked;\n  opts.coverSheet=$('opt-coversheet').checked;\n  opts.backCoverDesign=$('opt-backcoverdesign').value;\n  opts.coverAccent=$('opt-coveraccent').value;\n  opts.coverFontSize=parseInt($('opt-coverfontsize').value);\n  opts.customFont=$('opt-customfont').value;\n  opts.calendar=$('opt-calendar').checked;\n  opts.calSpread=$('opt-calspread').checked;\n  opts.cropmarks=$('opt-cropmarks').checked;\n  opts.foldline=$('opt-foldline').checked;\n  opts.pagenums=$('opt-pagenums').checked;\n  opts.printGuide=$('opt-printguide').checked;\n  opts.colorIcons=$('opt-coloricons').checked;\n  opts.emptyLines=parseInt($('opt-emptylines').value);\n  opts.fillPattern=$('opt-fillpattern').value;\n  opts.habitMap=$('opt-habitmap').checked;\n  opts.goalsPage=$('opt-goalspage').checked;\n  opts.moodCal=$('opt-moodcal').checked;\n  opts.expenseTracker=$('opt-expenses').checked;\n  opts.reflectionPage=$('opt-reflection').checked;\n  opts.linkFieldsGraphs=$('opt-linkfg').checked;\n  opts.flip=document.querySelector('input[name=\"flip\"]:checked')?.value||'long';\n  opts.moonPhase=$('opt-moonphase').checked;\n  opts.weatherIcons=$('opt-weathericons').checked;\n  opts.weatherIconSize=parseFloat($('opt-weathericonsize').value)||3.5;\n  opts.energyBattery=$('opt-energybattery').checked;\n  opts.batterySegs=parseInt($('opt-batterysegs').value)||5;\n  opts.batteryStroke=parseFloat($('opt-batterystroke')?.value)||0.4;\n  opts.iconSize=parseFloat($('opt-iconsize').value)||5;\n  opts.iconGap=parseFloat($('opt-icongap').value)||1.5;\n  opts.iconStroke=parseFloat($('opt-iconstroke').value)||1.5;\n  opts.fzWeekHdr=parseFloat($('opt-fz-weekhdr').value)||6;\n  opts.fzDow=parseFloat($('opt-fz-dow').value)||6;\n  opts.fzDayNum=parseFloat($('opt-fz-daynum').value)||18;\n  opts.fzHabit=parseFloat($('opt-fz-habit').value)||6;\n  opts.fzFieldLbl=parseFloat($('opt-fz-fieldlbl').value)||4.5;\n  opts.fzMoodSz=parseFloat($('opt-fz-moodsz').value)||5;\n  opts.habRowGap=parseFloat($('opt-habrowgap').value)||1.5;\n  opts.moodGap=parseFloat($('opt-moodgap').value)||2;\n  opts.moonSize=parseFloat($('opt-moonsize').value)||3.5;\n}\n\nfunction onOptionChange(){\n  readOptsFromUI();\n  generate();\n}\n\nfunction toggleLink(){\n  opts.linkFieldsGraphs=$('opt-linkfg').checked;\n  $('metric-section').style.display=opts.linkFieldsGraphs?'none':'';\n  if(opts.linkFieldsGraphs){\n    graphMetrics=dailyFields.map(f=>({id:f.id,title:f.label,min:null,max:null,step:null}));\n    renderMetrics();\n  }\n  generate();\n}\n\n/* \u2500\u2500 Import / Export / Reset \u2500\u2500 */\nfunction exportSettings(){\n  readOptsFromUI();\n  const data={habits,bottomBoxes,selectedIcon,selectedDays,opts,graphMetrics,dailyFields,\n    month:parseInt($('sel-m').value),year:parseInt($('sel-y').value)};\n  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});\n  const a=document.createElement('a');\n  a.href=URL.createObjectURL(blob);\n  a.download='tn-weekly-settings.json';\n  a.click();\n  URL.revokeObjectURL(a.href);\n}\n\nfunction importSettings(e){\n  const file=e.target.files[0];\n  if(!file) return;\n  const reader=new FileReader();\n  reader.onload=function(){\n    try{\n      const data=JSON.parse(reader.result);\n      if(data.habits) habits=data.habits;\n      if(data.bottomBoxes) bottomBoxes=data.bottomBoxes;\n      if(data.selectedIcon) selectedIcon=data.selectedIcon;\n      if(data.selectedDays) selectedDays=data.selectedDays;\n      if(data.opts) opts={...opts,...data.opts};\n      if(data.graphMetrics) graphMetrics=data.graphMetrics;\n      if(data.dailyFields) dailyFields=data.dailyFields;\n      if(data.month!=null) $('sel-m').value=data.month;\n      if(data.year!=null) $('sel-y').value=data.year;\n      applyOptsToUI();\n      buildThemeGrid();\n      buildColorOverrides();\n      renderMetrics();\n      renderDailyFields();\n      renderHabits();\n      renderBottomBoxes();\n      buildDayPick();\n      generate();\n    }catch(err){ alert('Invalid settings file.'); }\n  };\n  reader.readAsText(file);\n  e.target.value='';\n}\n\nfunction resetAll(){\n  localStorage.removeItem(STORAGE_KEY);\n  location.reload();\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   LUCIDE ICON ELEMENT\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction lucideEl(name, w, h){\n  const s=document.createElement('span');\n  s.setAttribute('data-lucide', name);\n  s.style.cssText=`width:${w};height:${h};display:block;flex-shrink:0;`;\n  return s;\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   ICON PICKER\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction buildIconPicker(){\n  if(pickerBuilt) return;\n  const panel=$('icon-picker-panel');\n  HABIT_ICONS.forEach(name=>{\n    const btn=document.createElement('button');\n    btn.className='icon-opt';\n    btn.title=name;\n    btn.appendChild(lucideEl(name,'14px','14px'));\n    btn.onclick=e=>{\n      e.stopPropagation();\n      selectHabitIcon(name);\n    };\n    panel.appendChild(btn);\n  });\n  lucide.createIcons();\n  pickerBuilt=true;\n}\n\nfunction toggleIconPicker(e){\n  e.stopPropagation();\n  buildIconPicker();\n  $('icon-picker-panel').classList.toggle('open');\n}\n\nfunction selectHabitIcon(name){\n  selectedIcon=name; saveState();\n  const btn=$('h-icon-btn');\n  btn.innerHTML='';\n  btn.appendChild(lucideEl(name,'16px','16px'));\n  lucide.createIcons();\n  $('icon-picker-panel').querySelectorAll('.icon-opt').forEach(b=>{\n    b.classList.toggle('selected', b.title===name);\n  });\n  $('icon-picker-panel').classList.remove('open');\n}\n\ndocument.addEventListener('click',()=>{\n  const p=$('icon-picker-panel');\n  if(p) p.classList.remove('open');\n});\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   DAY PICKER\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction buildDayPick(){\n  const row=$('day-pick');row.innerHTML='';\n  const labels=getWdayLabels();\n  labels.forEach((lbl,i)=>{\n    const dayIdx = opts.weekstart==='sunday' ? i : i;\n    const b=el('button','day-btn'+(selectedDays.includes(dayIdx)?' on':''),lbl);\n    b.type='button';\n    b.onclick=e=>{\n      e.stopPropagation();\n      if(selectedDays.includes(dayIdx)){\n        if(selectedDays.length>1) selectedDays=selectedDays.filter(d=>d!==dayIdx);\n      } else {\n        selectedDays=[...selectedDays,dayIdx].sort((a,b)=>a-b);\n      }\n      buildDayPick(); saveState();\n    };\n    row.appendChild(b);\n  });\n}\n\n/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n   HABIT UI\n   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */\nfunction addHabit(){\n  const name=$('h-name').value.trim();\n  if(!name) return;\n  habits.push({icon:selectedIcon,name,days:[...selectedDays],id:Date.now()});\n  $('h-name').value='';\n  renderHabits(); generate();\n}\nfunction removeH",
+      "summary": "'use strict';. Contains 5 functions/classes: toggleMenu, adjustZoom, getElemColor, getElemFont, ....",
+      "file_hash": "c25a0988"
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::toggleMenu",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 6,
+      "keywords": [
+        "togglemenu",
+        "toggle",
+        "menu"
+      ],
+      "symbol_type": "utility",
+      "name": "toggleMenu",
+      "line_start": 2,
+      "line_end": 7,
+      "body_hash": "5aed13c8",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::adjustZoom",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 10,
+      "keywords": [
+        "adjustzoom",
+        "adjust",
+        "zoom"
+      ],
+      "symbol_type": "utility",
+      "name": "adjustZoom",
+      "line_start": 10,
+      "line_end": 19,
+      "body_hash": "64d1cd21",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getElemColor",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 3,
+      "keywords": [
+        "getelemcolor",
+        "get",
+        "elem",
+        "color"
+      ],
+      "symbol_type": "utility",
+      "name": "getElemColor",
+      "line_start": 172,
+      "line_end": 174,
+      "body_hash": "e7aa8e85",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getElemFont",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 3,
+      "keywords": [
+        "getelemfont",
+        "get",
+        "elem",
+        "font"
+      ],
+      "symbol_type": "utility",
+      "name": "getElemFont",
+      "line_start": 175,
+      "line_end": 177,
+      "body_hash": "91b92980",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getHabitIconColor",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "gethabiticoncolor",
+        "get",
+        "habit",
+        "icon",
+        "color"
+      ],
+      "symbol_type": "utility",
+      "name": "getHabitIconColor",
+      "line_start": 178,
+      "line_end": 181,
+      "body_hash": "e4142ae8",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getHabitNameColor",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "gethabitnamecolor",
+        "get",
+        "habit",
+        "name",
+        "color"
+      ],
+      "symbol_type": "utility",
+      "name": "getHabitNameColor",
+      "line_start": 182,
+      "line_end": 185,
+      "body_hash": "d58a3a2c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getHabitFont",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 3,
+      "keywords": [
+        "gethabitfont",
+        "get",
+        "habit",
+        "font"
+      ],
+      "symbol_type": "utility",
+      "name": "getHabitFont",
+      "line_start": 186,
+      "line_end": 188,
+      "body_hash": "18823886",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getPageColors",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 9,
+      "keywords": [
+        "getpagecolors",
+        "get",
+        "page",
+        "colors"
+      ],
+      "symbol_type": "utility",
+      "name": "getPageColors",
+      "line_start": 189,
+      "line_end": 197,
+      "body_hash": "cff5092c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::el",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [],
+      "symbol_type": "utility",
+      "name": "el",
+      "line_start": 206,
+      "line_end": 206,
+      "body_hash": "d82bf82f",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::daysInMonth",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "daysinmonth",
+        "days",
+        "month"
+      ],
+      "symbol_type": "utility",
+      "name": "daysInMonth",
+      "line_start": 207,
+      "line_end": 207,
+      "body_hash": "c8c4deac",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::firstDow",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "firstdow",
+        "first",
+        "dow"
+      ],
+      "symbol_type": "utility",
+      "name": "firstDow",
+      "line_start": 208,
+      "line_end": 208,
+      "body_hash": "6e0a597a",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::dow",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "dow"
+      ],
+      "symbol_type": "utility",
+      "name": "dow",
+      "line_start": 209,
+      "line_end": 209,
+      "body_hash": "58a55d45",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getWdayLabels",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "getwdaylabels",
+        "get",
+        "wday",
+        "labels"
+      ],
+      "symbol_type": "utility",
+      "name": "getWdayLabels",
+      "line_start": 211,
+      "line_end": 211,
+      "body_hash": "1f0238c7",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getColors",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 6,
+      "keywords": [
+        "getcolors",
+        "get",
+        "colors"
+      ],
+      "symbol_type": "utility",
+      "name": "getColors",
+      "line_start": 214,
+      "line_end": 219,
+      "body_hash": "4281c484",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::toggleSection",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 7,
+      "keywords": [
+        "togglesection",
+        "toggle",
+        "section"
+      ],
+      "symbol_type": "utility",
+      "name": "toggleSection",
+      "line_start": 224,
+      "line_end": 230,
+      "body_hash": "a4978c88",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildThemeGrid",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 25,
+      "keywords": [
+        "buildthemegrid",
+        "build",
+        "theme",
+        "grid"
+      ],
+      "symbol_type": "utility",
+      "name": "buildThemeGrid",
+      "line_start": 235,
+      "line_end": 259,
+      "body_hash": "8860fa07",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildColorOverrides",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 20,
+      "keywords": [
+        "buildcoloroverrides",
+        "build",
+        "color",
+        "overrides"
+      ],
+      "symbol_type": "utility",
+      "name": "buildColorOverrides",
+      "line_start": 261,
+      "line_end": 280,
+      "body_hash": "f607a6e3",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::renderMetrics",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 35,
+      "keywords": [
+        "rendermetrics",
+        "render",
+        "metrics"
+      ],
+      "symbol_type": "utility",
+      "name": "renderMetrics",
+      "line_start": 285,
+      "line_end": 319,
+      "body_hash": "25d38280",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::addMetric",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 7,
+      "keywords": [
+        "addmetric",
+        "add",
+        "metric"
+      ],
+      "symbol_type": "utility",
+      "name": "addMetric",
+      "line_start": 320,
+      "line_end": 326,
+      "body_hash": "d00e53f7",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::renderDailyFields",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 15,
+      "keywords": [
+        "renderdailyfields",
+        "render",
+        "daily",
+        "fields"
+      ],
+      "symbol_type": "utility",
+      "name": "renderDailyFields",
+      "line_start": 331,
+      "line_end": 345,
+      "body_hash": "7ca84600",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::addDailyField",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 7,
+      "keywords": [
+        "adddailyfield",
+        "add",
+        "daily",
+        "field"
+      ],
+      "symbol_type": "utility",
+      "name": "addDailyField",
+      "line_start": 346,
+      "line_end": 352,
+      "body_hash": "38065be4",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::saveState",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 9,
+      "keywords": [
+        "savestate",
+        "save",
+        "state"
+      ],
+      "symbol_type": "utility",
+      "name": "saveState",
+      "line_start": 357,
+      "line_end": 365,
+      "body_hash": "e75d04c0",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::loadState",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 16,
+      "keywords": [
+        "loadstate",
+        "load",
+        "state"
+      ],
+      "symbol_type": "utility",
+      "name": "loadState",
+      "line_start": 367,
+      "line_end": 382,
+      "body_hash": "4fcb2907",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::applyOptsToUI",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 69,
+      "keywords": [
+        "applyoptstoui",
+        "apply",
+        "opts"
+      ],
+      "symbol_type": "utility",
+      "name": "applyOptsToUI",
+      "line_start": 384,
+      "line_end": 452,
+      "body_hash": "3cf5136c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::readOptsFromUI",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 63,
+      "keywords": [
+        "readoptsfromui",
+        "read",
+        "opts",
+        "from"
+      ],
+      "symbol_type": "utility",
+      "name": "readOptsFromUI",
+      "line_start": 454,
+      "line_end": 516,
+      "body_hash": "6cbecfe7",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::onOptionChange",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "onoptionchange",
+        "option",
+        "change"
+      ],
+      "symbol_type": "utility",
+      "name": "onOptionChange",
+      "line_start": 518,
+      "line_end": 521,
+      "body_hash": "d44a7f6c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::toggleLink",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 9,
+      "keywords": [
+        "togglelink",
+        "toggle",
+        "link"
+      ],
+      "symbol_type": "utility",
+      "name": "toggleLink",
+      "line_start": 523,
+      "line_end": 531,
+      "body_hash": "cfb3faa9",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::exportSettings",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 11,
+      "keywords": [
+        "exportsettings",
+        "export",
+        "settings"
+      ],
+      "symbol_type": "utility",
+      "name": "exportSettings",
+      "line_start": 534,
+      "line_end": 544,
+      "body_hash": "410f6381",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::importSettings",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 30,
+      "keywords": [
+        "importsettings",
+        "import",
+        "settings"
+      ],
+      "symbol_type": "utility",
+      "name": "importSettings",
+      "line_start": 546,
+      "line_end": 575,
+      "body_hash": "accb074c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::resetAll",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "resetall",
+        "reset",
+        "all"
+      ],
+      "symbol_type": "utility",
+      "name": "resetAll",
+      "line_start": 577,
+      "line_end": 580,
+      "body_hash": "98291fb1",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::lucideEl",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 6,
+      "keywords": [
+        "lucideel",
+        "lucide"
+      ],
+      "symbol_type": "utility",
+      "name": "lucideEl",
+      "line_start": 585,
+      "line_end": 590,
+      "body_hash": "467da335",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildIconPicker",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 17,
+      "keywords": [
+        "buildiconpicker",
+        "build",
+        "icon",
+        "picker"
+      ],
+      "symbol_type": "utility",
+      "name": "buildIconPicker",
+      "line_start": 595,
+      "line_end": 611,
+      "body_hash": "c410f86a",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::toggleIconPicker",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 5,
+      "keywords": [
+        "toggleiconpicker",
+        "toggle",
+        "icon",
+        "picker"
+      ],
+      "symbol_type": "utility",
+      "name": "toggleIconPicker",
+      "line_start": 613,
+      "line_end": 617,
+      "body_hash": "3f073898",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::selectHabitIcon",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 11,
+      "keywords": [
+        "selecthabiticon",
+        "select",
+        "habit",
+        "icon"
+      ],
+      "symbol_type": "utility",
+      "name": "selectHabitIcon",
+      "line_start": 619,
+      "line_end": 629,
+      "body_hash": "93a8df7d",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildDayPick",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 19,
+      "keywords": [
+        "builddaypick",
+        "build",
+        "day",
+        "pick"
+      ],
+      "symbol_type": "utility",
+      "name": "buildDayPick",
+      "line_start": 639,
+      "line_end": 657,
+      "body_hash": "e23a9848",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::addHabit",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 7,
+      "keywords": [
+        "addhabit",
+        "add",
+        "habit"
+      ],
+      "symbol_type": "utility",
+      "name": "addHabit",
+      "line_start": 662,
+      "line_end": 668,
+      "body_hash": "ab62223f",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::removeHabit",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "removehabit",
+        "remove",
+        "habit"
+      ],
+      "symbol_type": "utility",
+      "name": "removeHabit",
+      "line_start": 669,
+      "line_end": 669,
+      "body_hash": "83447698",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::toggleHabitDay",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 9,
+      "keywords": [
+        "togglehabitday",
+        "toggle",
+        "habit",
+        "day"
+      ],
+      "symbol_type": "utility",
+      "name": "toggleHabitDay",
+      "line_start": 670,
+      "line_end": 678,
+      "body_hash": "0aedef46",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::renderHabits",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 21,
+      "keywords": [
+        "renderhabits",
+        "render",
+        "habits"
+      ],
+      "symbol_type": "utility",
+      "name": "renderHabits",
+      "line_start": 679,
+      "line_end": 699,
+      "body_hash": "a9eba14b",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::addBottomBox",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 8,
+      "keywords": [
+        "addbottombox",
+        "add",
+        "bottom",
+        "box"
+      ],
+      "symbol_type": "utility",
+      "name": "addBottomBox",
+      "line_start": 702,
+      "line_end": 709,
+      "body_hash": "752a54b8",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::removeBottomBox",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "removebottombox",
+        "remove",
+        "bottom",
+        "box"
+      ],
+      "symbol_type": "utility",
+      "name": "removeBottomBox",
+      "line_start": 710,
+      "line_end": 713,
+      "body_hash": "8985bce1",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::renderBottomBoxes",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 9,
+      "keywords": [
+        "renderbottomboxes",
+        "render",
+        "bottom",
+        "boxes"
+      ],
+      "symbol_type": "utility",
+      "name": "renderBottomBoxes",
+      "line_start": 714,
+      "line_end": 722,
+      "body_hash": "715df53c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildWeeks",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 12,
+      "keywords": [
+        "buildweeks",
+        "build",
+        "weeks"
+      ],
+      "symbol_type": "utility",
+      "name": "buildWeeks",
+      "line_start": 727,
+      "line_end": 738,
+      "body_hash": "18bc8bdc",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getCheckboxStyle",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 10,
+      "keywords": [
+        "getcheckboxstyle",
+        "get",
+        "checkbox",
+        "style"
+      ],
+      "symbol_type": "utility",
+      "name": "getCheckboxStyle",
+      "line_start": 743,
+      "line_end": 752,
+      "body_hash": "58a7633c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getSeparatorStyle",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 5,
+      "keywords": [
+        "getseparatorstyle",
+        "get",
+        "separator",
+        "style"
+      ],
+      "symbol_type": "utility",
+      "name": "getSeparatorStyle",
+      "line_start": 754,
+      "line_end": 758,
+      "body_hash": "abe10fd3",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getFillStyle",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 20,
+      "keywords": [
+        "getfillstyle",
+        "get",
+        "fill",
+        "style"
+      ],
+      "symbol_type": "utility",
+      "name": "getFillStyle",
+      "line_start": 760,
+      "line_end": 779,
+      "body_hash": "b36c34df",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::tnSize",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "tnsize",
+        "size"
+      ],
+      "symbol_type": "utility",
+      "name": "tnSize",
+      "line_start": 781,
+      "line_end": 784,
+      "body_hash": "7dd95dfb",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getPaperSize",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "getpapersize",
+        "get",
+        "paper",
+        "size"
+      ],
+      "symbol_type": "utility",
+      "name": "getPaperSize",
+      "line_start": 785,
+      "line_end": 785,
+      "body_hash": "d297de16",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::activeFont",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "activefont",
+        "active",
+        "font"
+      ],
+      "symbol_type": "utility",
+      "name": "activeFont",
+      "line_start": 786,
+      "line_end": 786,
+      "body_hash": "bf860335",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::coverAccent",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 1,
+      "keywords": [
+        "coveraccent",
+        "cover",
+        "accent"
+      ],
+      "symbol_type": "utility",
+      "name": "coverAccent",
+      "line_start": 787,
+      "line_end": 787,
+      "body_hash": "13849930",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::handleImageUpload",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 12,
+      "keywords": [
+        "handleimageupload",
+        "handle",
+        "image",
+        "upload"
+      ],
+      "symbol_type": "utility",
+      "name": "handleImageUpload",
+      "line_start": 789,
+      "line_end": 800,
+      "body_hash": "ba3b66da",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::clearImage",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 6,
+      "keywords": [
+        "clearimage",
+        "clear",
+        "image"
+      ],
+      "symbol_type": "utility",
+      "name": "clearImage",
+      "line_start": 801,
+      "line_end": 806,
+      "body_hash": "71a71e97",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::iconColor",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 4,
+      "keywords": [
+        "iconcolor",
+        "icon",
+        "color"
+      ],
+      "symbol_type": "utility",
+      "name": "iconColor",
+      "line_start": 808,
+      "line_end": 811,
+      "body_hash": "af76f3c2",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::onRangeChange",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 5,
+      "keywords": [
+        "onrangechange",
+        "range",
+        "change"
+      ],
+      "symbol_type": "utility",
+      "name": "onRangeChange",
+      "line_start": 813,
+      "line_end": 817,
+      "body_hash": "b21c3d6d",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildInspector",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 272,
+      "keywords": [
+        "buildinspector",
+        "build",
+        "inspector"
+      ],
+      "symbol_type": "utility",
+      "name": "buildInspector",
+      "line_start": 894,
+      "line_end": 1165,
+      "body_hash": "e76a45de",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::showMobileInspector",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 3,
+      "keywords": [
+        "showmobileinspector",
+        "show",
+        "mobile",
+        "inspector"
+      ],
+      "symbol_type": "utility",
+      "name": "showMobileInspector",
+      "line_start": 1167,
+      "line_end": 1169,
+      "body_hash": "6daced89",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::closeMobileInspector",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 3,
+      "keywords": [
+        "closemobileinspector",
+        "close",
+        "mobile",
+        "inspector"
+      ],
+      "symbol_type": "utility",
+      "name": "closeMobileInspector",
+      "line_start": 1170,
+      "line_end": 1172,
+      "body_hash": "7e47df5c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::showInspector",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 3,
+      "keywords": [
+        "showinspector",
+        "show",
+        "inspector"
+      ],
+      "symbol_type": "utility",
+      "name": "showInspector",
+      "line_start": 1173,
+      "line_end": 1175,
+      "body_hash": "7ba4b5e1",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::closeInspector",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 5,
+      "keywords": [
+        "closeinspector",
+        "close",
+        "inspector"
+      ],
+      "symbol_type": "utility",
+      "name": "closeInspector",
+      "line_start": 1176,
+      "line_end": 1180,
+      "body_hash": "0d3baaf8",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getPagePadding",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 5,
+      "keywords": [
+        "getpagepadding",
+        "get",
+        "page",
+        "padding"
+      ],
+      "symbol_type": "utility",
+      "name": "getPagePadding",
+      "line_start": 1182,
+      "line_end": 1186,
+      "body_hash": "1dd6defa",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildGraphSVG",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 74,
+      "keywords": [
+        "buildgraphsvg",
+        "build",
+        "graph",
+        "svg"
+      ],
+      "symbol_type": "utility",
+      "name": "buildGraphSVG",
+      "line_start": 1191,
+      "line_end": 1264,
+      "body_hash": "a16b10b2",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::pg",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 8,
+      "keywords": [],
+      "symbol_type": "utility",
+      "name": "pg",
+      "line_start": 1269,
+      "line_end": 1276,
+      "body_hash": "b1cb188c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkCoverTitle",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 8,
+      "keywords": [
+        "mkcovertitle",
+        "cover",
+        "title"
+      ],
+      "symbol_type": "utility",
+      "name": "mkCoverTitle",
+      "line_start": 1278,
+      "line_end": 1285,
+      "body_hash": "1bb97266",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkCover",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 136,
+      "keywords": [
+        "mkcover",
+        "cover"
+      ],
+      "symbol_type": "utility",
+      "name": "mkCover",
+      "line_start": 1287,
+      "line_end": 1422,
+      "body_hash": "f49c51eb",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkBackCover",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 109,
+      "keywords": [
+        "mkbackcover",
+        "back",
+        "cover"
+      ],
+      "symbol_type": "utility",
+      "name": "mkBackCover",
+      "line_start": 1424,
+      "line_end": 1532,
+      "body_hash": "d05cda50",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkHabitMap",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 145,
+      "keywords": [
+        "mkhabitmap",
+        "habit",
+        "map"
+      ],
+      "symbol_type": "utility",
+      "name": "mkHabitMap",
+      "line_start": 1536,
+      "line_end": 1680,
+      "body_hash": "4d663150",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkGoalsPage",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 41,
+      "keywords": [
+        "mkgoalspage",
+        "goals",
+        "page"
+      ],
+      "symbol_type": "utility",
+      "name": "mkGoalsPage",
+      "line_start": 1682,
+      "line_end": 1722,
+      "body_hash": "f4a5a42d",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkMoodCalendar",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 66,
+      "keywords": [
+        "mkmoodcalendar",
+        "mood",
+        "calendar"
+      ],
+      "symbol_type": "utility",
+      "name": "mkMoodCalendar",
+      "line_start": 1724,
+      "line_end": 1789,
+      "body_hash": "397601ca",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkExpenseTracker",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 44,
+      "keywords": [
+        "mkexpensetracker",
+        "expense",
+        "tracker"
+      ],
+      "symbol_type": "utility",
+      "name": "mkExpenseTracker",
+      "line_start": 1791,
+      "line_end": 1834,
+      "body_hash": "1b3272e7",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkReflection",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 37,
+      "keywords": [
+        "mkreflection",
+        "reflection"
+      ],
+      "symbol_type": "utility",
+      "name": "mkReflection",
+      "line_start": 1836,
+      "line_end": 1872,
+      "body_hash": "f64cc7b4",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkPrintGuide",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 113,
+      "keywords": [
+        "mkprintguide",
+        "print",
+        "guide"
+      ],
+      "symbol_type": "utility",
+      "name": "mkPrintGuide",
+      "line_start": 1874,
+      "line_end": 1986,
+      "body_hash": "44102586",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkCalendarGrid",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 23,
+      "keywords": [
+        "mkcalendargrid",
+        "calendar",
+        "grid"
+      ],
+      "symbol_type": "utility",
+      "name": "mkCalendarGrid",
+      "line_start": 1988,
+      "line_end": 2010,
+      "body_hash": "6fdcdda3",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkCalendar",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 25,
+      "keywords": [
+        "mkcalendar",
+        "calendar"
+      ],
+      "symbol_type": "utility",
+      "name": "mkCalendar",
+      "line_start": 2012,
+      "line_end": 2036,
+      "body_hash": "73cc3e5c",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkCalendarColumnSpread",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 18,
+      "keywords": [
+        "mkcalendarcolumnspread",
+        "calendar",
+        "column",
+        "spread"
+      ],
+      "symbol_type": "utility",
+      "name": "mkCalendarColumnSpread",
+      "line_start": 2038,
+      "line_end": 2055,
+      "body_hash": "5591dc46",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::buildSpreadHalf",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 55,
+      "keywords": [
+        "buildspreadhalf",
+        "build",
+        "spread",
+        "half"
+      ],
+      "symbol_type": "utility",
+      "name": "buildSpreadHalf",
+      "line_start": 2057,
+      "line_end": 2111,
+      "body_hash": "2dea8b08",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkMonthNotes",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 9,
+      "keywords": [
+        "mkmonthnotes",
+        "month",
+        "notes"
+      ],
+      "symbol_type": "utility",
+      "name": "mkMonthNotes",
+      "line_start": 2113,
+      "line_end": 2121,
+      "body_hash": "e627a1aa",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkMonthGraphs",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 24,
+      "keywords": [
+        "mkmonthgraphs",
+        "month",
+        "graphs"
+      ],
+      "symbol_type": "utility",
+      "name": "mkMonthGraphs",
+      "line_start": 2123,
+      "line_end": 2146,
+      "body_hash": "c283bc72",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkWeekSummary",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 52,
+      "keywords": [
+        "mkweeksummary",
+        "week",
+        "summary"
+      ],
+      "symbol_type": "utility",
+      "name": "mkWeekSummary",
+      "line_start": 2148,
+      "line_end": 2199,
+      "body_hash": "d85cbb00",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::getMoonPhase",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 7,
+      "keywords": [
+        "getmoonphase",
+        "get",
+        "moon",
+        "phase"
+      ],
+      "symbol_type": "utility",
+      "name": "getMoonPhase",
+      "line_start": 2201,
+      "line_end": 2207,
+      "body_hash": "8c19842e",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkBatterySVG",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 17,
+      "keywords": [
+        "mkbatterysvg",
+        "battery",
+        "svg"
+      ],
+      "symbol_type": "utility",
+      "name": "mkBatterySVG",
+      "line_start": 2209,
+      "line_end": 2225,
+      "body_hash": "1cec1abd",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::moonPhaseSVG",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 20,
+      "keywords": [
+        "moonphasesvg",
+        "moon",
+        "phase",
+        "svg"
+      ],
+      "symbol_type": "utility",
+      "name": "moonPhaseSVG",
+      "line_start": 2227,
+      "line_end": 2246,
+      "body_hash": "9b257a63",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::mkDay",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 169,
+      "keywords": [
+        "mkday",
+        "day"
+      ],
+      "symbol_type": "utility",
+      "name": "mkDay",
+      "line_start": 2248,
+      "line_end": 2416,
+      "body_hash": "188521b1",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::setView",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 12,
+      "keywords": [
+        "setview",
+        "set",
+        "view"
+      ],
+      "symbol_type": "utility",
+      "name": "setView",
+      "line_start": 2422,
+      "line_end": 2433,
+      "body_hash": "00fe4832",
+      "confidence": "medium",
+      "exported": false
+    },
+    {
+      "id": "tn-insert-generator/weekly.js::generate",
+      "kind": "symbol",
+      "path": "tn-insert-generator/weekly.js",
+      "ext": ".js",
+      "size": 224,
+      "keywords": [
+        "generate"
+      ],
+      "symbol_type": "utility",
+      "name": "generate",
+      "line_start": 2438,
+      "line_end": 2661,
+      "body_hash": "6c4eb5e7",
+      "confidence": "medium",
+      "exported": false
+    }
+  ],
+  "edges": [
+    {
+      "from": "CLAUDE.md",
+      "to": "src/auth.ts",
+      "rel": "references"
+    },
+    {
+      "from": "CLAUDE.md",
+      "to": "src/db.ts",
+      "rel": "references"
+    },
+    {
+      "from": "CLAUDE.md",
+      "to": "relevant/file.ts",
+      "rel": "references"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::toggleMenu",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::adjustZoom",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getElemColor",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getElemFont",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getHabitIconColor",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getHabitNameColor",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getHabitFont",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getPageColors",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::el",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::daysInMonth",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::firstDow",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::dow",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getWdayLabels",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getColors",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::toggleSection",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildThemeGrid",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildColorOverrides",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::renderMetrics",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::addMetric",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::renderDailyFields",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::addDailyField",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::saveState",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::loadState",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::applyOptsToUI",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::readOptsFromUI",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::onOptionChange",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::toggleLink",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::exportSettings",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::importSettings",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::resetAll",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::lucideEl",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildIconPicker",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::toggleIconPicker",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::selectHabitIcon",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildDayPick",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::addHabit",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::removeHabit",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::toggleHabitDay",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::renderHabits",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::addBottomBox",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::removeBottomBox",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::renderBottomBoxes",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildWeeks",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getCheckboxStyle",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getSeparatorStyle",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getFillStyle",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::tnSize",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getPaperSize",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::activeFont",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::coverAccent",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::handleImageUpload",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::clearImage",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::iconColor",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::onRangeChange",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildInspector",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::showMobileInspector",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::closeMobileInspector",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::showInspector",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::closeInspector",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getPagePadding",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildGraphSVG",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::pg",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkCoverTitle",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkCover",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkBackCover",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkHabitMap",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkGoalsPage",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkMoodCalendar",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkExpenseTracker",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkReflection",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkPrintGuide",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkCalendarGrid",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkCalendar",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkCalendarColumnSpread",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::buildSpreadHalf",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkMonthNotes",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkMonthGraphs",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkWeekSummary",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::getMoonPhase",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkBatterySVG",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::moonPhaseSVG",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::mkDay",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::setView",
+      "rel": "contains"
+    },
+    {
+      "from": "tn-insert-generator/weekly.js",
+      "to": "tn-insert-generator/weekly.js::generate",
+      "rel": "contains"
+    }
+  ]
+}
