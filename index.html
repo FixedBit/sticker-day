@@ -630,7 +630,7 @@ textarea {
     <div id="itemsSection">
       <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px 0;">
         <h3 style="margin:0;">Items</h3>
-        <button class="btn btn-sm" onclick="toggleEmojiPicker()">😊 Emojis</button>
+        <button class="btn btn-sm" onclick="addBlankItem()">+ Blank Line</button>
       </div>
 
       <div id="emojiPicker" class="emoji-picker"></div>
@@ -802,6 +802,13 @@ function addItem() {
     renderItemList();
     updatePreview();
   }
+}
+
+function addBlankItem() {
+  items.push({emoji: '✓', text: ''});
+  renderItemList();
+  updatePreview();
+  saveSettings();
 }
 
 function updateItem(index, value) {
