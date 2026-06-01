@@ -735,7 +735,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dateYear').value = now.getFullYear();
 
   buildEmojiPicker();
+
+  // Load from URL first (takes precedence)
+  const loadedFromURL = loadFromURL();
+
+  // If not loaded from URL, try localStorage
+  if (!loadedFromURL) {
+    loadSettings();
+  }
+
   renderItemList();
+  renderQueue();
+  onTypeChange(); // Set up initial UI state
   updatePreview();
 });
 
@@ -757,6 +768,7 @@ function selectEmoji(emoji) {
     items[currentEmojiIndex].emoji = emoji;
     renderItemList();
     updatePreview();
+    saveSettings();
   }
   currentEmojiIndex = null;
   emojiPickerOpen = false;
@@ -801,6 +813,7 @@ function removeItem(index) {
   items.splice(index, 1);
   renderItemList();
   updatePreview();
+  saveSettings();
 }
 
 // Drag and drop
@@ -845,6 +858,12 @@ function onTypeChange() {
   document.getElementById('lineCountRow').style.display =
     type === 'checklist' ? 'flex' : 'none';
 
+  document.getElementById('blankCountRow').style.display =
+    type === 'blank-checklist' ? 'flex' : 'none';
+
+  document.getElementById('imageSection').style.display =
+    type === 'image-sticker' ? 'block' : 'none';
+
   // Set default titles
   const titles = {
     'habit-tracker': 'Daily Habits',
@@ -854,7 +873,9 @@ function onTypeChange() {
     'blank-label': 'Notes',
     'checklist': 'Checklist',
     'shopping-list': 'Shopping List',
-    'meal-prep': 'Meal Prep'
+    'meal-prep': 'Meal Prep',
+    'blank-checklist': 'Checklist',
+    'image-sticker': ''
   };
 
   if (!document.getElementById('stickerTitle').value) {
@@ -862,6 +883,7 @@ function onTypeChange() {
   }
 
   updatePreview();
+  saveSettings();
 }
 
 // Update value displays
@@ -870,21 +892,25 @@ function updateHeightValue() {
   document.getElementById('heightValue').textContent = val + 'mm';
   document.getElementById('heightDisplay').textContent = val;
   updatePreview();
+  saveSettings();
 }
 
 function updateFontSizeValue() {
   const val = document.getElementById('fontSize').value;
   document.getElementById('fontSizeValue').textContent = val + 'pt';
   updatePreview();
+  saveSettings();
 }
 
 function updateSpacingValue() {
   const val = document.getElementById('itemSpacing').value;
   document.getElementById('spacingValue').textContent = val + 'px';
   updatePreview();
+  saveSettings();
 }
 
 // Preview generation
+let updatePreviewTimeout;
 function updatePreview() {
   const type = document.getElementById('stickerType').value;
   const height = parseInt(document.getElementById('stickerHeight').value);
@@ -894,6 +920,12 @@ function updatePreview() {
 
   const sticker = createSticker(type, height);
   grid.appendChild(sticker);
+
+  // Debounce saveSettings for live typing
+  clearTimeout(updatePreviewTimeout);
+  updatePreviewTimeout = setTimeout(() => {
+    saveSettings();
+  }, 500);
 }
 
 function createSticker(type, heightMm) {
@@ -914,9 +946,11 @@ function createSticker(type, heightMm) {
   const content = document.createElement('div');
   content.className = 'sticker-content';
 
-  // Apply font size
+  // Apply font size and font family
   const fontSize = document.getElementById('fontSize').value;
+  const fontFamily = document.getElementById('fontFamily').value;
   content.style.fontSize = fontSize + 'pt';
+  content.style.fontFamily = fontFamily;
 
   switch(type) {
     case 'habit-tracker':
@@ -942,6 +976,12 @@ function createSticker(type, heightMm) {
       break;
     case 'meal-prep':
       content.innerHTML = generateMealPrep();
+      break;
+    case 'blank-checklist':
+      content.innerHTML = generateBlankChecklist();
+      break;
+    case 'image-sticker':
+      content.innerHTML = generateImageSticker();
       break;
   }
 
@@ -1136,23 +1176,353 @@ function generateMealPrep() {
   `;
 }
 
-// Export batch
-function exportBatch() {
-  const count = parseInt(document.getElementById('batchCount').value);
-  const grid = document.getElementById('sticker-grid');
-  const type = document.getElementById('stickerType').value;
-  const height = parseInt(document.getElementById('stickerHeight').value);
+// Mobile menu toggle
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
 
-  grid.innerHTML = '';
+// Image upload
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedImage = e.target.result;
+      document.getElementById('imagePreview').src = uploadedImage;
+      document.getElementById('imagePreview').style.display = 'block';
+      updatePreview();
+      saveSettings();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Blank checklist generator
+function generateBlankChecklist() {
+  const title = document.getElementById('stickerTitle').value || 'Checklist';
+  const count = parseInt(document.getElementById('blankCount').value) || 10;
+  const checkboxStyle = document.getElementById('checkboxStyle').value;
+  const boldTitle = document.getElementById('boldTitle').checked;
+  const showBorder = document.getElementById('showBorder').checked;
+  const spacing = document.getElementById('itemSpacing').value;
+
+  const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
+  const fontWeight = boldTitle ? 'bold' : 'normal';
+
+  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list">`;
 
   for (let i = 0; i < count; i++) {
-    const sticker = createSticker(type, height);
-    grid.appendChild(sticker);
+    html += `
+      <div class="habit-row" style="margin-bottom: ${spacing}px;">
+        <div class="checkbox ${checkboxStyle}"></div>
+        <div class="todo-line"></div>
+      </div>
+    `;
   }
 
-  setTimeout(() => {
-    alert(`Generated ${count} stickers. Use Print/PDF to export.`);
-  }, 100);
+  html += '</div>';
+  return html;
+}
+
+// Image sticker generator
+function generateImageSticker() {
+  if (!uploadedImage) {
+    return '<div style="text-align:center;padding:20px;color:#666;">Upload an image above</div>';
+  }
+
+  const title = document.getElementById('stickerTitle').value;
+  const boldTitle = document.getElementById('boldTitle').checked;
+  const showBorder = document.getElementById('showBorder').checked;
+
+  const titleHtml = title ? `<h3 style="${showBorder ? 'border-bottom: 2px solid black;' : ''} font-weight: ${boldTitle ? 'bold' : 'normal'};">${title}</h3>` : '';
+
+  return `
+    ${titleHtml}
+    <img src="${uploadedImage}" alt="Sticker" style="max-width:100%;height:auto;filter:grayscale(100%) contrast(1.2);">
+  `;
+}
+
+// Queue management
+function addToQueue() {
+  const type = document.getElementById('stickerType').value;
+  const height = parseInt(document.getElementById('stickerHeight').value);
+  const title = document.getElementById('stickerTitle').value || type;
+
+  const config = {
+    title: title,
+    type: type,
+    height: height,
+    checkboxStyle: document.getElementById('checkboxStyle').value,
+    boldTitle: document.getElementById('boldTitle').checked,
+    showBorder: document.getElementById('showBorder').checked,
+    fontFamily: document.getElementById('fontFamily').value,
+    fontSize: document.getElementById('fontSize').value,
+    itemSpacing: document.getElementById('itemSpacing').value,
+    lineCount: document.getElementById('lineCount').value,
+    blankCount: document.getElementById('blankCount').value,
+    items: [...items],
+    image: uploadedImage,
+    dateMonth: document.getElementById('dateMonth').value,
+    dateDay: document.getElementById('dateDay').value,
+    dateYear: document.getElementById('dateYear').value
+  };
+
+  queue.push({id: Date.now(), config: config, name: title});
+  renderQueue();
+
+  if (window.innerWidth <= 768) {
+    toggleMenu();
+  }
+}
+
+function renderQueue() {
+  const list = document.getElementById('queue-list');
+  const count = document.getElementById('queue-count');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  count.textContent = queue.length;
+  downloadBtn.disabled = queue.length === 0;
+
+  if (queue.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:10px;color:#666;font-size:11px;">Queue is empty</div>';
+    return;
+  }
+
+  list.innerHTML = queue.map((item, i) => `
+    <div class="queue-item">
+      <span>${item.name} (${item.config.height}mm)</span>
+      <button onclick="removeFromQueue(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function removeFromQueue(index) {
+  queue.splice(index, 1);
+  renderQueue();
+}
+
+function clearQueue() {
+  if (queue.length === 0) return;
+  if (confirm('Clear all items from queue?')) {
+    queue = [];
+    renderQueue();
+  }
+}
+
+// Download all as ZIP
+async function downloadAllImages() {
+  if (queue.length === 0) {
+    alert('Queue is empty! Add stickers first.');
+    return;
+  }
+
+  if (!window.html2canvas || !window.JSZip) {
+    alert('Libraries not loaded. Please refresh.');
+    return;
+  }
+
+  const downloadBtn = document.getElementById('downloadBtn');
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = 'Processing...';
+
+  try {
+    const zip = new JSZip();
+    const grid = document.getElementById('sticker-grid');
+
+    for (let i = 0; i < queue.length; i++) {
+      const item = queue[i];
+      grid.innerHTML = '';
+
+      const sticker = createSticker(item.config.type, item.config.height, item.config);
+      sticker.style.border = 'none';
+      sticker.querySelector('.sticker-label').style.display = 'none';
+      grid.appendChild(sticker);
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const canvas = await html2canvas(sticker, {
+        backgroundColor: '#ffffff',
+        scale: 3,
+        logging: false
+      });
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const base64Data = dataUrl.split(',')[1];
+
+      const filename = `sticker-${String(i + 1).padStart(3, '0')}-${item.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+      zip.file(filename, base64Data, {base64: true});
+
+      downloadBtn.textContent = `${i + 1}/${queue.length}...`;
+    }
+
+    const content = await zip.generateAsync({type: 'blob'});
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `d20-stickers-${Date.now()}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    updatePreview();
+    alert(`Downloaded ${queue.length} stickers!`);
+  } catch (error) {
+    alert('Error: ' + error.message);
+    console.error(error);
+  } finally {
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = '⬇ ZIP';
+  }
+}
+
+// LocalStorage
+function saveSettings() {
+  const settings = {
+    stickerType: document.getElementById('stickerType').value,
+    stickerHeight: document.getElementById('stickerHeight').value,
+    stickerTitle: document.getElementById('stickerTitle').value,
+    fontFamily: document.getElementById('fontFamily').value,
+    boldTitle: document.getElementById('boldTitle').checked,
+    showBorder: document.getElementById('showBorder').checked,
+    checkboxStyle: document.getElementById('checkboxStyle').value,
+    fontSize: document.getElementById('fontSize').value,
+    itemSpacing: document.getElementById('itemSpacing').value,
+    lineCount: document.getElementById('lineCount').value,
+    blankCount: document.getElementById('blankCount').value,
+    items: items
+  };
+  localStorage.setItem('d20StickerSettings', JSON.stringify(settings));
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem('d20StickerSettings');
+  if (!saved) return false;
+
+  try {
+    const settings = JSON.parse(saved);
+    if (settings.stickerType) document.getElementById('stickerType').value = settings.stickerType;
+    if (settings.stickerHeight) {
+      document.getElementById('stickerHeight').value = settings.stickerHeight;
+      updateHeightValue();
+    }
+    if (settings.stickerTitle) document.getElementById('stickerTitle').value = settings.stickerTitle;
+    if (settings.fontFamily) document.getElementById('fontFamily').value = settings.fontFamily;
+    if (settings.boldTitle !== undefined) document.getElementById('boldTitle').checked = settings.boldTitle;
+    if (settings.showBorder !== undefined) document.getElementById('showBorder').checked = settings.showBorder;
+    if (settings.checkboxStyle) document.getElementById('checkboxStyle').value = settings.checkboxStyle;
+    if (settings.fontSize) {
+      document.getElementById('fontSize').value = settings.fontSize;
+      updateFontSizeValue();
+    }
+    if (settings.itemSpacing) {
+      document.getElementById('itemSpacing').value = settings.itemSpacing;
+      updateSpacingValue();
+    }
+    if (settings.lineCount) document.getElementById('lineCount').value = settings.lineCount;
+    if (settings.blankCount) document.getElementById('blankCount').value = settings.blankCount;
+    if (settings.items) items = settings.items;
+
+    return true;
+  } catch (e) {
+    console.error('Failed to load settings:', e);
+    return false;
+  }
+}
+
+// URL Share
+function shareSticker() {
+  const settings = {
+    type: document.getElementById('stickerType').value,
+    h: document.getElementById('stickerHeight').value,
+    t: document.getElementById('stickerTitle').value,
+    f: document.getElementById('fontFamily').value,
+    bt: document.getElementById('boldTitle').checked ? 1 : 0,
+    sb: document.getElementById('showBorder').checked ? 1 : 0,
+    cs: document.getElementById('checkboxStyle').value,
+    fs: document.getElementById('fontSize').value,
+    sp: document.getElementById('itemSpacing').value,
+    items: items
+  };
+
+  const encoded = btoa(JSON.stringify(settings));
+  const url = `${window.location.origin}${window.location.pathname}?s=${encoded}`;
+
+  navigator.clipboard.writeText(url).then(() => {
+    alert('Share link copied to clipboard! ✓\n\nAnyone with this link will see your exact sticker design.');
+  }).catch(() => {
+    prompt('Copy this share link:', url);
+  });
+}
+
+function loadFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get('s');
+
+  if (!encoded) return false;
+
+  try {
+    const settings = JSON.parse(atob(encoded));
+    if (settings.type) document.getElementById('stickerType').value = settings.type;
+    if (settings.h) {
+      document.getElementById('stickerHeight').value = settings.h;
+      updateHeightValue();
+    }
+    if (settings.t) document.getElementById('stickerTitle').value = settings.t;
+    if (settings.f) document.getElementById('fontFamily').value = settings.f;
+    if (settings.bt !== undefined) document.getElementById('boldTitle').checked = settings.bt === 1;
+    if (settings.sb !== undefined) document.getElementById('showBorder').checked = settings.sb === 1;
+    if (settings.cs) document.getElementById('checkboxStyle').value = settings.cs;
+    if (settings.fs) {
+      document.getElementById('fontSize').value = settings.fs;
+      updateFontSizeValue();
+    }
+    if (settings.sp) {
+      document.getElementById('itemSpacing').value = settings.sp;
+      updateSpacingValue();
+    }
+    if (settings.items) items = settings.items;
+
+    return true;
+  } catch (e) {
+    console.error('Failed to load from URL:', e);
+    return false;
+  }
+}
+
+// Import/Export Items
+function exportItems() {
+  const data = JSON.stringify(items, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'd20-items.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importItems(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (Array.isArray(imported)) {
+        items = imported;
+        renderItemList();
+        updatePreview();
+        saveSettings();
+        alert(`Imported ${items.length} items!`);
+      } else {
+        alert('Invalid file format');
+      }
+    } catch (error) {
+      alert('Error reading file: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 </script>
 
