@@ -271,6 +271,86 @@ textarea {
   text-align: right;
 }
 
+/* ══ MOBILE MENU ══ */
+#menu-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1001;
+  background: #0066cc;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  #menu-toggle { display: block; }
+  #sidebar {
+    transform: translateX(-100%);
+    z-index: 1000;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.5);
+  }
+  #sidebar.open {
+    transform: translateX(0);
+  }
+  #preview-container {
+    margin-left: 0;
+    padding: 20px;
+    padding-top: 60px;
+  }
+}
+
+/* ══ QUEUE SECTION ══ */
+#queue-section {
+  background: #2a2a2a;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+#queue-list {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.queue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px;
+  background: #333;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.queue-item button {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 16px;
+}
+
+.btn-success {
+  background: #2a7f2a;
+}
+
+.btn-success:hover {
+  background: #236623;
+}
+
+.btn-success:disabled {
+  background: #555;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ══ PREVIEW AREA ══ */
 #preview-container {
   margin-left: 320px;
@@ -416,10 +496,22 @@ textarea {
 </head>
 <body>
 
+<button id="menu-toggle" onclick="toggleMenu()">☰ Menu</button>
+
 <!-- ══ SIDEBAR ══ -->
 <div id="sidebar">
   <h1>D20 Thermal Sticker Generator</h1>
-  <p class="subtitle">Create black & white stickers optimized for 57mm thermal printers</p>
+  <p class="subtitle">Create custom stickers for 57mm thermal printers</p>
+
+  <!-- Queue -->
+  <div id="queue-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h3 style="margin:0;font-size:11px;">Queue (<span id="queue-count">0</span>)</h3>
+      <button class="btn btn-sm btn-success" onclick="downloadAllImages()" id="downloadBtn" disabled>⬇ ZIP</button>
+    </div>
+    <div id="queue-list"></div>
+    <button class="btn btn-sm" onclick="clearQueue()" style="margin-top:8px;background:#555;">Clear Queue</button>
+  </div>
 
   <!-- Sticker Type -->
   <div class="section">
@@ -428,12 +520,13 @@ textarea {
       <select id="stickerType" onchange="onTypeChange()">
         <option value="habit-tracker">Daily Habit Tracker</option>
         <option value="todo-list">To-Do List</option>
+        <option value="blank-checklist">Blank Checklist</option>
         <option value="date-stamp">Date Stamp</option>
         <option value="weekly-habits">Weekly Habit Grid</option>
         <option value="blank-label">Blank Label</option>
-        <option value="checklist">Numbered Checklist</option>
         <option value="shopping-list">Shopping List</option>
         <option value="meal-prep">Meal Prep Label</option>
+        <option value="image-sticker">Image Sticker</option>
       </select>
     </div>
   </div>
@@ -486,6 +579,20 @@ textarea {
       </select>
     </div>
 
+    <div class="control-row">
+      <label>Font</label>
+      <select id="fontFamily" onchange="updatePreview()">
+        <option value="Arial">Arial</option>
+        <option value="Roboto">Roboto</option>
+        <option value="Open Sans">Open Sans</option>
+        <option value="Lato">Lato</option>
+        <option value="Montserrat">Montserrat</option>
+        <option value="Courier Prime">Courier Prime</option>
+        <option value="Permanent Marker">Permanent Marker</option>
+        <option value="Dancing Script">Dancing Script</option>
+      </select>
+    </div>
+
     <div class="control-row" id="fontSizeRow">
       <label>Font Size</label>
       <div class="range-group">
@@ -505,6 +612,18 @@ textarea {
     <div class="control-row" id="lineCountRow" style="display:none;">
       <label>Number of Lines</label>
       <input type="number" id="lineCount" value="8" min="1" max="20" onchange="updatePreview()">
+    </div>
+
+    <div class="control-row" id="blankCountRow" style="display:none;">
+      <label>Blank Lines</label>
+      <input type="number" id="blankCount" value="10" min="1" max="30" onchange="updatePreview()">
+    </div>
+
+    <!-- Image Upload -->
+    <div id="imageSection" style="display:none;margin-top:12px;">
+      <h3 style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;opacity:.6;margin-bottom:6px;">Image</h3>
+      <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)" style="font-size:10px;width:100%;margin-bottom:8px;">
+      <img id="imagePreview" style="max-width:100%;border-radius:4px;display:none;">
     </div>
 
     <!-- Items List -->
@@ -557,18 +676,14 @@ textarea {
 
   <!-- Actions -->
   <div class="section">
-    <button class="btn btn-primary" onclick="updatePreview()">⟳ Refresh Preview</button>
-    <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
-  </div>
-
-  <!-- Batch Export -->
-  <div style="margin-top:auto;padding-top:20px;border-top:1px solid #333;">
-    <h3>Batch Export</h3>
-    <div class="control-row">
-      <label>Quantity</label>
-      <input type="number" id="batchCount" value="1" min="1" max="50">
+    <button class="btn btn-primary" onclick="addToQueue()">+ Add to Queue</button>
+    <button class="btn" onclick="window.print()">🖨 Print</button>
+    <button class="btn" onclick="shareSticker()">🔗 Share</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+      <button class="btn btn-sm" onclick="exportItems()">📤 Export Items</button>
+      <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">📥 Import Items</button>
     </div>
-    <button class="btn" onclick="exportBatch()">Export Batch</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importItems(event)">
   </div>
 </div>
 
