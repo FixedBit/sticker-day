@@ -535,6 +535,10 @@ textarea {
         <option value="blank-checklist">Blank Checklist</option>
         <option value="date-stamp">Date Stamp</option>
         <option value="weekly-habits">Weekly Habit Grid</option>
+        <option value="mood-tracker">Mood Tracker</option>
+        <option value="water-tracker">Water Tracker</option>
+        <option value="countdown">Countdown Tracker</option>
+        <option value="qr-code">QR Code</option>
         <option value="blank-label">Blank Label</option>
         <option value="shopping-list">Shopping List</option>
         <option value="meal-prep">Meal Prep Label</option>
@@ -621,6 +625,20 @@ textarea {
       </div>
     </div>
 
+    <div class="control-row" id="layoutRow">
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="multiColumn" onchange="updatePreview()">
+        <span>Multi-Column Layout</span>
+      </label>
+    </div>
+
+    <div class="control-row" id="rotationRow">
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="rotateText" onchange="updatePreview()">
+        <span>Rotate 90° (Vertical Text)</span>
+      </label>
+    </div>
+
     <div class="control-row" id="lineCountRow" style="display:none;">
       <label>Number of Lines</label>
       <input type="number" id="lineCount" value="8" min="1" max="20" onchange="updatePreview()">
@@ -653,6 +671,28 @@ textarea {
         <input type="text" id="newItem" placeholder="Add item..." onkeypress="if(event.key==='Enter')addItem()">
         <button onclick="addItem()">+ Add</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Countdown Settings -->
+  <div class="section" id="countdownSection" style="display:none;">
+    <h3>Countdown</h3>
+    <div class="control-row">
+      <label>Event</label>
+      <input type="text" id="countdownEvent" placeholder="Birthday" oninput="updatePreview()">
+    </div>
+    <div class="control-row">
+      <label>Days Left</label>
+      <input type="number" id="countdownDays" value="30" min="1" max="999" onchange="updatePreview()">
+    </div>
+  </div>
+
+  <!-- QR Code Settings -->
+  <div class="section" id="qrSection" style="display:none;">
+    <h3>QR Code</h3>
+    <div class="control-row">
+      <label>Text/URL</label>
+      <textarea id="qrText" placeholder="https://example.com" rows="3" style="width:100%;background:#333;border:1px solid #555;color:#e0e0e0;padding:8px;border-radius:4px;font-size:11px;font-family:monospace;" oninput="updatePreview()"></textarea>
     </div>
   </div>
 
@@ -866,13 +906,19 @@ function onTypeChange() {
 
   // Show/hide sections
   document.getElementById('itemsSection').style.display =
-    ['habit-tracker', 'todo-list', 'shopping-list', 'weekly-habits'].includes(type) ? 'block' : 'none';
+    ['habit-tracker', 'todo-list', 'shopping-list', 'weekly-habits', 'mood-tracker', 'water-tracker'].includes(type) ? 'block' : 'none';
 
   document.getElementById('dateSection').style.display =
     type === 'date-stamp' ? 'block' : 'none';
 
+  document.getElementById('countdownSection').style.display =
+    type === 'countdown' ? 'block' : 'none';
+
+  document.getElementById('qrSection').style.display =
+    type === 'qr-code' ? 'block' : 'none';
+
   document.getElementById('checkboxStyleRow').style.display =
-    ['habit-tracker', 'todo-list', 'shopping-list', 'weekly-habits'].includes(type) ? 'flex' : 'none';
+    ['habit-tracker', 'todo-list', 'shopping-list', 'weekly-habits', 'water-tracker'].includes(type) ? 'flex' : 'none';
 
   document.getElementById('lineCountRow').style.display =
     type === 'checklist' ? 'flex' : 'none';
@@ -889,6 +935,10 @@ function onTypeChange() {
     'todo-list': 'To-Do',
     'date-stamp': '',
     'weekly-habits': 'Weekly Tracker',
+    'mood-tracker': 'Mood Tracker',
+    'water-tracker': 'Water Intake',
+    'countdown': 'Countdown',
+    'qr-code': '',
     'blank-label': 'Notes',
     'checklist': 'Checklist',
     'shopping-list': 'Shopping List',
@@ -946,8 +996,15 @@ function updatePreview() {
 }
 
 function createSticker(type, heightMm) {
-  const widthPx = THERMAL_WIDTH_MM * MM_TO_PX;
-  const heightPx = heightMm * MM_TO_PX;
+  const rotateText = document.getElementById('rotateText').checked;
+
+  let widthPx = THERMAL_WIDTH_MM * MM_TO_PX;
+  let heightPx = heightMm * MM_TO_PX;
+
+  // Swap dimensions if rotated
+  if (rotateText) {
+    [widthPx, heightPx] = [heightPx, widthPx];
+  }
 
   const container = document.createElement('div');
   container.className = 'thermal-sticker';
@@ -957,7 +1014,7 @@ function createSticker(type, heightMm) {
 
   const label = document.createElement('div');
   label.className = 'sticker-label';
-  label.textContent = `${THERMAL_WIDTH_MM}mm × ${heightMm}mm`;
+  label.textContent = rotateText ? `${heightMm}mm × ${THERMAL_WIDTH_MM}mm (Rotated)` : `${THERMAL_WIDTH_MM}mm × ${heightMm}mm`;
   container.appendChild(label);
 
   const content = document.createElement('div');
@@ -968,6 +1025,19 @@ function createSticker(type, heightMm) {
   const fontFamily = document.getElementById('fontFamily').value;
   content.style.fontSize = fontSize + 'pt';
   content.style.fontFamily = fontFamily;
+
+  // Apply rotation
+  if (rotateText) {
+    content.style.transform = 'rotate(90deg)';
+    content.style.transformOrigin = 'center';
+    content.style.width = heightPx + 'px';
+    content.style.height = widthPx + 'px';
+    content.style.position = 'absolute';
+    content.style.top = '50%';
+    content.style.left = '50%';
+    content.style.marginTop = -(widthPx / 2) + 'px';
+    content.style.marginLeft = -(heightPx / 2) + 'px';
+  }
 
   switch(type) {
     case 'habit-tracker':
@@ -981,6 +1051,18 @@ function createSticker(type, heightMm) {
       break;
     case 'weekly-habits':
       content.innerHTML = generateWeeklyHabits();
+      break;
+    case 'mood-tracker':
+      content.innerHTML = generateMoodTracker();
+      break;
+    case 'water-tracker':
+      content.innerHTML = generateWaterTracker();
+      break;
+    case 'countdown':
+      content.innerHTML = generateCountdown();
+      break;
+    case 'qr-code':
+      content.innerHTML = generateQRCode();
       break;
     case 'checklist':
       content.innerHTML = generateChecklist();
@@ -1012,15 +1094,17 @@ function generateHabitTracker() {
   const boldTitle = document.getElementById('boldTitle').checked;
   const showBorder = document.getElementById('showBorder').checked;
   const spacing = document.getElementById('itemSpacing').value;
+  const multiColumn = document.getElementById('multiColumn').checked;
 
   const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
   const fontWeight = boldTitle ? 'bold' : 'normal';
+  const columnStyle = multiColumn ? 'column-count: 2; column-gap: 8px;' : '';
 
-  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list">`;
+  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list" style="${columnStyle}">`;
 
   items.forEach(item => {
     html += `
-      <div class="habit-row" style="margin-bottom: ${spacing}px;">
+      <div class="habit-row" style="margin-bottom: ${spacing}px; break-inside: avoid;">
         <div class="checkbox ${checkboxStyle}"></div>
         <span>${item.emoji} ${item.text}</span>
       </div>
@@ -1037,15 +1121,17 @@ function generateTodoList() {
   const boldTitle = document.getElementById('boldTitle').checked;
   const showBorder = document.getElementById('showBorder').checked;
   const spacing = document.getElementById('itemSpacing').value;
+  const multiColumn = document.getElementById('multiColumn').checked;
 
   const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
   const fontWeight = boldTitle ? 'bold' : 'normal';
+  const columnStyle = multiColumn ? 'column-count: 2; column-gap: 8px;' : '';
 
-  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list">`;
+  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list" style="${columnStyle}">`;
 
   items.forEach(item => {
     html += `
-      <div class="habit-row" style="margin-bottom: ${spacing}px;">
+      <div class="habit-row" style="margin-bottom: ${spacing}px; break-inside: avoid;">
         <div class="checkbox ${checkboxStyle}"></div>
         <span>${item.text}</span>
       </div>
@@ -1062,15 +1148,17 @@ function generateShoppingList() {
   const boldTitle = document.getElementById('boldTitle').checked;
   const showBorder = document.getElementById('showBorder').checked;
   const spacing = document.getElementById('itemSpacing').value;
+  const multiColumn = document.getElementById('multiColumn').checked;
 
   const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
   const fontWeight = boldTitle ? 'bold' : 'normal';
+  const columnStyle = multiColumn ? 'column-count: 2; column-gap: 8px;' : '';
 
-  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list">`;
+  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list" style="${columnStyle}">`;
 
   items.forEach(item => {
     html += `
-      <div class="habit-row" style="margin-bottom: ${spacing}px;">
+      <div class="habit-row" style="margin-bottom: ${spacing}px; break-inside: avoid;">
         <div class="checkbox ${checkboxStyle}"></div>
         <span>${item.emoji} ${item.text}</span>
       </div>
@@ -1191,6 +1279,100 @@ function generateMealPrep() {
       </div>
     </div>
   `;
+}
+
+function generateMoodTracker() {
+  const title = document.getElementById('stickerTitle').value || 'Mood Tracker';
+  const boldTitle = document.getElementById('boldTitle').checked;
+  const showBorder = document.getElementById('showBorder').checked;
+  const moods = ['😊', '😐', '😔', '😡', '😰', '😴', '🤩'];
+
+  const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
+  const fontWeight = boldTitle ? 'bold' : 'normal';
+
+  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div style="font-size:9px;margin-top:8px;">`;
+
+  items.slice(0, 7).forEach((item, index) => {
+    html += `<div style="display:flex;align-items:center;margin-bottom:6px;gap:4px;">
+      <span style="font-weight:bold;width:25px;">${item.text || `Day ${index + 1}`}</span>
+      <div style="display:flex;gap:2px;flex:1;">`;
+
+    moods.forEach(mood => {
+      html += `<span style="font-size:14px;opacity:0.3;">${mood}</span>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function generateWaterTracker() {
+  const title = document.getElementById('stickerTitle').value || 'Water Intake';
+  const checkboxStyle = document.getElementById('checkboxStyle').value;
+  const boldTitle = document.getElementById('boldTitle').checked;
+  const showBorder = document.getElementById('showBorder').checked;
+  const glasses = 8;
+
+  const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
+  const fontWeight = boldTitle ? 'bold' : 'normal';
+
+  let html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div style="margin-top:8px;">`;
+  html += `<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px;justify-items:center;">`;
+
+  for (let i = 0; i < glasses; i++) {
+    html += `<div style="text-align:center;">
+      <div style="font-size:16px;">💧</div>
+      <div class="checkbox ${checkboxStyle}" style="width:14px;height:14px;margin:2px auto;"></div>
+    </div>`;
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+
+function generateCountdown() {
+  const event = document.getElementById('countdownEvent').value || 'Event';
+  const days = document.getElementById('countdownDays').value || '30';
+  const boldTitle = document.getElementById('boldTitle').checked;
+  const showBorder = document.getElementById('showBorder').checked;
+
+  const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
+  const fontWeight = boldTitle ? 'bold' : 'normal';
+
+  return `
+    <div style="text-align:center;padding:12px 0;">
+      <h3 style="${borderStyle} font-weight: ${fontWeight};margin-bottom:12px;">${event}</h3>
+      <div style="font-size:32px;font-weight:bold;margin:8px 0;">${days}</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;">Days to Go</div>
+    </div>
+  `;
+}
+
+function generateQRCode() {
+  const text = document.getElementById('qrText').value || 'https://example.com';
+  const title = document.getElementById('stickerTitle').value;
+
+  // Simple QR code placeholder - in a real implementation, use a QR library
+  // For now, just show the text with instructions
+  let html = '';
+  if (title) {
+    html += `<h3 style="text-align:center;margin-bottom:8px;">${title}</h3>`;
+  }
+
+  html += `
+    <div style="text-align:center;padding:16px;">
+      <div style="width:120px;height:120px;margin:0 auto;border:2px solid black;display:flex;align-items:center;justify-content:center;background:white;">
+        <div style="font-size:8px;padding:8px;word-break:break-all;max-height:100%;overflow:hidden;">
+          QR: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}
+        </div>
+      </div>
+      <div style="font-size:8px;margin-top:6px;word-break:break-all;">${text}</div>
+    </div>
+  `;
+
+  return html;
 }
 
 // Mobile menu toggle
