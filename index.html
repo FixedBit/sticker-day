@@ -254,6 +254,256 @@ textarea {
   background: #333;
 }
 
+/* ══ WIZARD MODAL ══ */
+#wizard-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+
+#wizard-modal.active {
+  display: flex;
+}
+
+.wizard-container {
+  background: #1a1a1a;
+  border: 2px solid #444;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.wizard-header {
+  background: #0066cc;
+  padding: 16px 20px;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wizard-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: white;
+}
+
+.wizard-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wizard-progress {
+  background: #2a2a2a;
+  padding: 12px 20px;
+  border-bottom: 1px solid #444;
+}
+
+.wizard-steps {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wizard-step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #444;
+  transition: all 0.3s;
+}
+
+.wizard-step-dot.active {
+  background: #0066cc;
+  transform: scale(1.3);
+}
+
+.wizard-step-dot.completed {
+  background: #00cc66;
+}
+
+.wizard-body {
+  padding: 24px 20px;
+  min-height: 300px;
+}
+
+.wizard-step {
+  display: none;
+}
+
+.wizard-step.active {
+  display: block;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wizard-step h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #e0e0e0;
+}
+
+.wizard-option {
+  background: #2a2a2a;
+  border: 2px solid #444;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wizard-option:hover {
+  border-color: #0066cc;
+  background: #333;
+}
+
+.wizard-option.selected {
+  border-color: #0066cc;
+  background: #003d7a;
+}
+
+.wizard-option h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: #e0e0e0;
+}
+
+.wizard-option p {
+  margin: 0;
+  font-size: 11px;
+  color: #999;
+}
+
+.wizard-input-group {
+  margin-bottom: 16px;
+}
+
+.wizard-input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wizard-input-group input,
+.wizard-input-group select,
+.wizard-input-group textarea {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.wizard-item-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.wizard-item {
+  background: #2a2a2a;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wizard-item input {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.wizard-item button {
+  background: #cc0000;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.wizard-footer {
+  background: #2a2a2a;
+  padding: 16px 20px;
+  border-top: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wizard-footer button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.wizard-footer button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.wizard-btn-back {
+  background: #444;
+  color: #e0e0e0;
+}
+
+.wizard-btn-back:hover:not(:disabled) {
+  background: #555;
+}
+
+.wizard-btn-next,
+.wizard-btn-finish {
+  background: #0066cc;
+  color: white;
+  flex: 1;
+}
+
+.wizard-btn-next:hover:not(:disabled),
+.wizard-btn-finish:hover:not(:disabled) {
+  background: #0052a3;
+}
+
 .range-group {
   display: flex;
   align-items: center;
@@ -314,6 +564,33 @@ textarea {
   .thermal-sticker {
     max-width: calc(100vw - 30px);
     overflow: hidden;
+  }
+
+  /* Wizard mobile styles */
+  .wizard-container {
+    width: 95%;
+    max-height: 95vh;
+  }
+  .wizard-header h2 {
+    font-size: 16px;
+  }
+  .wizard-body {
+    padding: 16px;
+    min-height: 250px;
+  }
+  .wizard-footer {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+  .wizard-footer button {
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+  .wizard-option h4 {
+    font-size: 13px;
+  }
+  .wizard-option p {
+    font-size: 10px;
   }
 }
 
@@ -514,6 +791,10 @@ textarea {
 <div id="sidebar">
   <h1>D20 Thermal Sticker Generator</h1>
   <p class="subtitle">Create custom stickers for 57mm thermal printers</p>
+
+  <button class="btn" onclick="openWizard()" style="width:100%;margin:12px 0;background:#00cc66;font-size:14px;padding:12px;">
+    ✨ Launch Wizard Setup
+  </button>
 
   <!-- Queue -->
   <div id="queue-section">
@@ -1723,7 +2004,358 @@ function importItems(event) {
   reader.readAsText(file);
   event.target.value = '';
 }
+
+// ══════════════════════════════════════════════════════
+// WIZARD
+// ══════════════════════════════════════════════════════
+
+let wizardStep = 0;
+let wizardData = {
+  type: 'habit-tracker',
+  height: 50,
+  title: '',
+  items: [],
+  settings: {}
+};
+
+function openWizard() {
+  wizardStep = 0;
+  wizardData = {
+    type: 'habit-tracker',
+    height: 50,
+    title: '',
+    items: [],
+    settings: {
+      fontSize: 10,
+      fontFamily: 'Arial',
+      boldTitle: false,
+      showBorder: true,
+      checkboxStyle: 'square',
+      spacing: 6,
+      multiColumn: false,
+      rotateText: false
+    }
+  };
+  document.getElementById('wizard-modal').classList.add('active');
+  renderWizardStep();
+}
+
+function closeWizard() {
+  document.getElementById('wizard-modal').classList.remove('active');
+}
+
+function wizardNext() {
+  wizardStep++;
+  renderWizardStep();
+}
+
+function wizardBack() {
+  if (wizardStep > 0) {
+    wizardStep--;
+    renderWizardStep();
+  }
+}
+
+function wizardFinish() {
+  // Apply wizard data to main form
+  document.getElementById('stickerType').value = wizardData.type;
+  document.getElementById('stickerHeight').value = wizardData.height;
+  document.getElementById('stickerTitle').value = wizardData.title;
+  document.getElementById('fontSize').value = wizardData.settings.fontSize;
+  document.getElementById('fontFamily').value = wizardData.settings.fontFamily;
+  document.getElementById('boldTitle').checked = wizardData.settings.boldTitle;
+  document.getElementById('showBorder').checked = wizardData.settings.showBorder;
+  document.getElementById('checkboxStyle').value = wizardData.settings.checkboxStyle;
+  document.getElementById('itemSpacing').value = wizardData.settings.spacing;
+  document.getElementById('multiColumn').checked = wizardData.settings.multiColumn;
+  document.getElementById('rotateText').checked = wizardData.settings.rotateText;
+
+  items = [...wizardData.items];
+
+  // Update UI
+  updateHeightValue();
+  updateFontSizeValue();
+  updateSpacingValue();
+  renderItemList();
+  onTypeChange();
+  updatePreview();
+
+  closeWizard();
+}
+
+function renderWizardStep() {
+  const totalSteps = 5;
+  const progressDots = document.querySelectorAll('.wizard-step-dot');
+  progressDots.forEach((dot, i) => {
+    dot.classList.remove('active', 'completed');
+    if (i < wizardStep) dot.classList.add('completed');
+    if (i === wizardStep) dot.classList.add('active');
+  });
+
+  // Hide all steps
+  document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+
+  // Show current step
+  document.getElementById('wizard-step-' + wizardStep).classList.add('active');
+
+  // Update buttons
+  document.getElementById('wizard-btn-back').disabled = wizardStep === 0;
+  document.getElementById('wizard-btn-next').style.display = wizardStep < totalSteps - 1 ? 'block' : 'none';
+  document.getElementById('wizard-btn-finish').style.display = wizardStep === totalSteps - 1 ? 'block' : 'none';
+
+  // Render step content
+  if (wizardStep === 0) renderWizardStepType();
+  if (wizardStep === 1) renderWizardStepDimensions();
+  if (wizardStep === 2) renderWizardStepTitle();
+  if (wizardStep === 3) renderWizardStepItems();
+  if (wizardStep === 4) renderWizardStepOptions();
+}
+
+function renderWizardStepType() {
+  const types = [
+    { value: 'habit-tracker', name: 'Daily Habit Tracker', desc: 'Track daily habits with checkboxes' },
+    { value: 'todo-list', name: 'To-Do List', desc: 'Simple task checklist' },
+    { value: 'weekly-habits', name: 'Weekly Habit Grid', desc: 'Track habits across 7 days' },
+    { value: 'mood-tracker', name: 'Mood Tracker', desc: '7-day emoji mood logger' },
+    { value: 'water-tracker', name: 'Water Tracker', desc: '8 glasses to check off' },
+    { value: 'countdown', name: 'Countdown', desc: 'Days until an event' },
+    { value: 'shopping-list', name: 'Shopping List', desc: 'Grocery shopping tracker' },
+    { value: 'date-stamp', name: 'Date Stamp', desc: 'Display a specific date' },
+    { value: 'blank-label', name: 'Blank Label', desc: 'Empty space for notes' },
+    { value: 'qr-code', name: 'QR Code', desc: 'QR code placeholder' },
+  ];
+
+  const html = types.map(t => `
+    <div class="wizard-option ${wizardData.type === t.value ? 'selected' : ''}"
+         onclick="wizardData.type='${t.value}'; renderWizardStepType();">
+      <h4>${t.name}</h4>
+      <p>${t.desc}</p>
+    </div>
+  `).join('');
+
+  document.getElementById('wizard-step-0-content').innerHTML = html;
+}
+
+function renderWizardStepDimensions() {
+  document.getElementById('wizard-height-value').textContent = wizardData.height + 'mm';
+}
+
+function updateWizardHeight(val) {
+  wizardData.height = parseInt(val);
+  document.getElementById('wizard-height-value').textContent = val + 'mm';
+}
+
+function renderWizardStepTitle() {
+  // Pre-fill default titles
+  const defaults = {
+    'habit-tracker': 'Daily Habits',
+    'todo-list': 'To-Do',
+    'weekly-habits': 'Weekly Tracker',
+    'mood-tracker': 'Mood Tracker',
+    'water-tracker': 'Water Intake',
+    'countdown': 'Countdown',
+    'shopping-list': 'Shopping',
+    'date-stamp': '',
+    'blank-label': 'Notes',
+    'qr-code': ''
+  };
+
+  if (!wizardData.title) {
+    wizardData.title = defaults[wizardData.type] || '';
+    document.getElementById('wizard-title').value = wizardData.title;
+  }
+}
+
+function renderWizardStepItems() {
+  const needsItems = ['habit-tracker', 'todo-list', 'weekly-habits', 'shopping-list', 'mood-tracker', 'water-tracker'];
+
+  if (!needsItems.includes(wizardData.type)) {
+    document.getElementById('wizard-step-3-content').innerHTML = `
+      <p style="color:#999;text-align:center;padding:40px 20px;">
+        This sticker type doesn't need a list of items.<br>
+        Click Next to continue.
+      </p>
+    `;
+    return;
+  }
+
+  const html = `
+    <div class="wizard-input-group">
+      <label>How many items?</label>
+      <input type="number" id="wizard-item-count" min="1" max="20" value="${wizardData.items.length || 5}"
+             onchange="updateWizardItemCount(this.value)">
+    </div>
+    <div class="wizard-item-list" id="wizard-items"></div>
+  `;
+
+  document.getElementById('wizard-step-3-content').innerHTML = html;
+  if (wizardData.items.length === 0) updateWizardItemCount(5);
+  else renderWizardItems();
+}
+
+function updateWizardItemCount(count) {
+  count = parseInt(count);
+  const current = wizardData.items.length;
+
+  if (count > current) {
+    for (let i = current; i < count; i++) {
+      wizardData.items.push({ emoji: '✓', text: '' });
+    }
+  } else if (count < current) {
+    wizardData.items = wizardData.items.slice(0, count);
+  }
+
+  renderWizardItems();
+}
+
+function renderWizardItems() {
+  const html = wizardData.items.map((item, i) => `
+    <div class="wizard-item">
+      <span style="font-size:14px;cursor:pointer;" onclick="wizardData.items[${i}].emoji = prompt('Enter emoji:', wizardData.items[${i}].emoji) || wizardData.items[${i}].emoji; renderWizardItems();">${item.emoji}</span>
+      <input type="text" placeholder="Item ${i + 1}" value="${item.text}"
+             oninput="wizardData.items[${i}].text = this.value;">
+    </div>
+  `).join('');
+
+  document.getElementById('wizard-items').innerHTML = html;
+}
+
+function renderWizardStepOptions() {
+  const needsCheckbox = ['habit-tracker', 'todo-list', 'weekly-habits', 'shopping-list', 'water-tracker'];
+
+  let html = `
+    <div class="wizard-input-group">
+      <label>Font</label>
+      <select onchange="wizardData.settings.fontFamily = this.value;">
+        <option value="Arial">Arial</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier Prime">Courier Prime</option>
+        <option value="Permanent Marker">Permanent Marker</option>
+      </select>
+    </div>
+    <div class="wizard-input-group">
+      <label>Font Size: <span id="wizard-font-size-val">${wizardData.settings.fontSize}pt</span></label>
+      <input type="range" min="7" max="14" step="0.5" value="${wizardData.settings.fontSize}"
+             oninput="wizardData.settings.fontSize = this.value; document.getElementById('wizard-font-size-val').textContent = this.value + 'pt';">
+    </div>
+  `;
+
+  if (needsCheckbox.includes(wizardData.type)) {
+    html += `
+      <div class="wizard-input-group">
+        <label>Checkbox Style</label>
+        <select onchange="wizardData.settings.checkboxStyle = this.value;">
+          <option value="square">Square</option>
+          <option value="circle">Circle</option>
+          <option value="line">Line</option>
+        </select>
+      </div>
+    `;
+  }
+
+  html += `
+    <div class="wizard-input-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" ${wizardData.settings.boldTitle ? 'checked' : ''}
+               onchange="wizardData.settings.boldTitle = this.checked;">
+        <span style="text-transform:none;">Bold Title</span>
+      </label>
+    </div>
+    <div class="wizard-input-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" ${wizardData.settings.showBorder ? 'checked' : ''}
+               onchange="wizardData.settings.showBorder = this.checked;">
+        <span style="text-transform:none;">Show Title Border</span>
+      </label>
+    </div>
+    <div class="wizard-input-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" ${wizardData.settings.multiColumn ? 'checked' : ''}
+               onchange="wizardData.settings.multiColumn = this.checked;">
+        <span style="text-transform:none;">Multi-Column Layout</span>
+      </label>
+    </div>
+    <div class="wizard-input-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" ${wizardData.settings.rotateText ? 'checked' : ''}
+               onchange="wizardData.settings.rotateText = this.checked;">
+        <span style="text-transform:none;">Rotate 90° (Vertical)</span>
+      </label>
+    </div>
+  `;
+
+  document.getElementById('wizard-step-4-content').innerHTML = html;
+}
 </script>
+
+<!-- ══ WIZARD MODAL ══ -->
+<div id="wizard-modal">
+  <div class="wizard-container">
+    <div class="wizard-header">
+      <h2>🧙 Sticker Wizard</h2>
+      <button class="wizard-close" onclick="closeWizard()">×</button>
+    </div>
+
+    <div class="wizard-progress">
+      <div class="wizard-steps">
+        <div class="wizard-step-dot"></div>
+        <div class="wizard-step-dot"></div>
+        <div class="wizard-step-dot"></div>
+        <div class="wizard-step-dot"></div>
+        <div class="wizard-step-dot"></div>
+      </div>
+    </div>
+
+    <div class="wizard-body">
+      <!-- Step 0: Type -->
+      <div id="wizard-step-0" class="wizard-step">
+        <h3>Choose Your Sticker Type</h3>
+        <div id="wizard-step-0-content"></div>
+      </div>
+
+      <!-- Step 1: Dimensions -->
+      <div id="wizard-step-1" class="wizard-step">
+        <h3>Set Dimensions</h3>
+        <div class="wizard-input-group">
+          <label>Sticker Height: <span id="wizard-height-value">50mm</span></label>
+          <input type="range" min="20" max="200" step="5" value="50"
+                 oninput="updateWizardHeight(this.value)">
+          <p style="font-size:11px;color:#999;margin-top:8px;">
+            Width is fixed at 57mm for thermal printer
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 2: Title & Style -->
+      <div id="wizard-step-2" class="wizard-step">
+        <h3>Title & Basic Style</h3>
+        <div class="wizard-input-group">
+          <label>Sticker Title</label>
+          <input type="text" id="wizard-title" placeholder="My Sticker"
+                 oninput="wizardData.title = this.value;">
+        </div>
+      </div>
+
+      <!-- Step 3: Items -->
+      <div id="wizard-step-3" class="wizard-step">
+        <h3>Add Your Items</h3>
+        <div id="wizard-step-3-content"></div>
+      </div>
+
+      <!-- Step 4: Options -->
+      <div id="wizard-step-4" class="wizard-step">
+        <h3>Customize Options</h3>
+        <div id="wizard-step-4-content"></div>
+      </div>
+    </div>
+
+    <div class="wizard-footer">
+      <button id="wizard-btn-back" class="wizard-btn-back" onclick="wizardBack()">← Back</button>
+      <button id="wizard-btn-next" class="wizard-btn-next" onclick="wizardNext()">Next →</button>
+      <button id="wizard-btn-finish" class="wizard-btn-finish" onclick="wizardFinish()" style="display:none;">✨ Create Sticker</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
