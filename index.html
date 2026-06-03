@@ -277,10 +277,62 @@ textarea {
   border: 2px solid #444;
   border-radius: 8px;
   width: 90%;
-  max-width: 600px;
+  max-width: 900px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.wizard-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.wizard-preview-panel {
+  width: 320px;
+  background: #0a0a0a;
+  border-left: 2px solid #444;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wizard-preview-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #444;
+  background: #1a1a1a;
+}
+
+.wizard-preview-header h4 {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+}
+
+.wizard-preview-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wizard-preview-sticker {
+  transform: scale(0.7);
+  transform-origin: top center;
 }
 
 .wizard-header {
@@ -571,12 +623,24 @@ textarea {
     width: 95%;
     max-height: 95vh;
   }
+  .wizard-main {
+    flex-direction: column;
+  }
+  .wizard-preview-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 2px solid #444;
+    max-height: 250px;
+  }
+  .wizard-preview-sticker {
+    transform: scale(0.5);
+  }
   .wizard-header h2 {
     font-size: 16px;
   }
   .wizard-body {
     padding: 16px;
-    min-height: 250px;
+    min-height: 200px;
   }
   .wizard-footer {
     padding: 12px;
@@ -2038,6 +2102,7 @@ function openWizard() {
   };
   document.getElementById('wizard-modal').classList.add('active');
   renderWizardStep();
+  updateWizardPreview();
 }
 
 function closeWizard() {
@@ -2109,6 +2174,9 @@ function renderWizardStep() {
   if (wizardStep === 2) renderWizardStepTitle();
   if (wizardStep === 3) renderWizardStepItems();
   if (wizardStep === 4) renderWizardStepOptions();
+
+  // Update preview on step change
+  updateWizardPreview();
 }
 
 function renderWizardStepType() {
@@ -2127,7 +2195,7 @@ function renderWizardStepType() {
 
   const html = types.map(t => `
     <div class="wizard-option ${wizardData.type === t.value ? 'selected' : ''}"
-         onclick="wizardData.type='${t.value}'; renderWizardStepType();">
+         onclick="wizardData.type='${t.value}'; renderWizardStepType(); updateWizardPreview();">
       <h4>${t.name}</h4>
       <p>${t.desc}</p>
     </div>
@@ -2206,14 +2274,15 @@ function updateWizardItemCount(count) {
   }
 
   renderWizardItems();
+  updateWizardPreview();
 }
 
 function renderWizardItems() {
   const html = wizardData.items.map((item, i) => `
     <div class="wizard-item">
-      <span style="font-size:14px;cursor:pointer;" onclick="wizardData.items[${i}].emoji = prompt('Enter emoji:', wizardData.items[${i}].emoji) || wizardData.items[${i}].emoji; renderWizardItems();">${item.emoji}</span>
+      <span style="font-size:14px;cursor:pointer;" onclick="wizardData.items[${i}].emoji = prompt('Enter emoji:', wizardData.items[${i}].emoji) || wizardData.items[${i}].emoji; renderWizardItems(); updateWizardPreview();">${item.emoji}</span>
       <input type="text" placeholder="Item ${i + 1}" value="${item.text}"
-             oninput="wizardData.items[${i}].text = this.value;">
+             oninput="wizardData.items[${i}].text = this.value; updateWizardPreview();">
     </div>
   `).join('');
 
@@ -2226,7 +2295,7 @@ function renderWizardStepOptions() {
   let html = `
     <div class="wizard-input-group">
       <label>Font</label>
-      <select onchange="wizardData.settings.fontFamily = this.value;">
+      <select onchange="wizardData.settings.fontFamily = this.value; updateWizardPreview();">
         <option value="Arial">Arial</option>
         <option value="Georgia">Georgia</option>
         <option value="Courier Prime">Courier Prime</option>
@@ -2236,7 +2305,7 @@ function renderWizardStepOptions() {
     <div class="wizard-input-group">
       <label>Font Size: <span id="wizard-font-size-val">${wizardData.settings.fontSize}pt</span></label>
       <input type="range" min="7" max="14" step="0.5" value="${wizardData.settings.fontSize}"
-             oninput="wizardData.settings.fontSize = this.value; document.getElementById('wizard-font-size-val').textContent = this.value + 'pt';">
+             oninput="wizardData.settings.fontSize = this.value; document.getElementById('wizard-font-size-val').textContent = this.value + 'pt'; updateWizardPreview();">
     </div>
   `;
 
@@ -2244,7 +2313,7 @@ function renderWizardStepOptions() {
     html += `
       <div class="wizard-input-group">
         <label>Checkbox Style</label>
-        <select onchange="wizardData.settings.checkboxStyle = this.value;">
+        <select onchange="wizardData.settings.checkboxStyle = this.value; updateWizardPreview();">
           <option value="square">Square</option>
           <option value="circle">Circle</option>
           <option value="line">Line</option>
@@ -2257,34 +2326,191 @@ function renderWizardStepOptions() {
     <div class="wizard-input-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" ${wizardData.settings.boldTitle ? 'checked' : ''}
-               onchange="wizardData.settings.boldTitle = this.checked;">
+               onchange="wizardData.settings.boldTitle = this.checked; updateWizardPreview();">
         <span style="text-transform:none;">Bold Title</span>
       </label>
     </div>
     <div class="wizard-input-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" ${wizardData.settings.showBorder ? 'checked' : ''}
-               onchange="wizardData.settings.showBorder = this.checked;">
+               onchange="wizardData.settings.showBorder = this.checked; updateWizardPreview();">
         <span style="text-transform:none;">Show Title Border</span>
       </label>
     </div>
     <div class="wizard-input-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" ${wizardData.settings.multiColumn ? 'checked' : ''}
-               onchange="wizardData.settings.multiColumn = this.checked;">
+               onchange="wizardData.settings.multiColumn = this.checked; updateWizardPreview();">
         <span style="text-transform:none;">Multi-Column Layout</span>
       </label>
     </div>
     <div class="wizard-input-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" ${wizardData.settings.rotateText ? 'checked' : ''}
-               onchange="wizardData.settings.rotateText = this.checked;">
+               onchange="wizardData.settings.rotateText = this.checked; updateWizardPreview();">
         <span style="text-transform:none;">Rotate 90° (Vertical)</span>
       </label>
     </div>
   `;
 
   document.getElementById('wizard-step-4-content').innerHTML = html;
+}
+
+function updateWizardPreview() {
+  const preview = document.getElementById('wizard-preview');
+
+  // Create a temporary sticker using wizardData
+  const sticker = createWizardSticker();
+
+  preview.innerHTML = '';
+  preview.appendChild(sticker);
+}
+
+function createWizardSticker() {
+  const rotateText = wizardData.settings.rotateText;
+  let widthPx = THERMAL_WIDTH_MM * MM_TO_PX;
+  let heightPx = wizardData.height * MM_TO_PX;
+
+  if (rotateText) {
+    [widthPx, heightPx] = [heightPx, widthPx];
+  }
+
+  const container = document.createElement('div');
+  container.className = 'thermal-sticker wizard-preview-sticker';
+  container.style.width = widthPx + 'px';
+  container.style.height = heightPx + 'px';
+
+  const label = document.createElement('div');
+  label.className = 'sticker-label';
+  label.textContent = rotateText ? `${wizardData.height}mm × ${THERMAL_WIDTH_MM}mm (Rotated)` : `${THERMAL_WIDTH_MM}mm × ${wizardData.height}mm`;
+  container.appendChild(label);
+
+  const content = document.createElement('div');
+  content.className = 'sticker-content';
+  content.style.fontSize = wizardData.settings.fontSize + 'pt';
+  content.style.fontFamily = wizardData.settings.fontFamily;
+
+  if (rotateText) {
+    content.style.transform = 'rotate(90deg)';
+    content.style.transformOrigin = 'center';
+    content.style.width = heightPx + 'px';
+    content.style.height = widthPx + 'px';
+    content.style.position = 'absolute';
+    content.style.top = '50%';
+    content.style.left = '50%';
+    content.style.marginTop = -(widthPx / 2) + 'px';
+    content.style.marginLeft = -(heightPx / 2) + 'px';
+  }
+
+  content.innerHTML = generateWizardStickerContent();
+  container.appendChild(content);
+
+  return container;
+}
+
+function generateWizardStickerContent() {
+  const type = wizardData.type;
+  const title = wizardData.title || 'Untitled';
+  const boldTitle = wizardData.settings.boldTitle;
+  const showBorder = wizardData.settings.showBorder;
+  const checkboxStyle = wizardData.settings.checkboxStyle;
+  const spacing = wizardData.settings.spacing;
+  const multiColumn = wizardData.settings.multiColumn;
+
+  const borderStyle = showBorder ? 'border-bottom: 2px solid black;' : '';
+  const fontWeight = boldTitle ? 'bold' : 'normal';
+  const columnStyle = multiColumn ? 'column-count: 2; column-gap: 8px;' : '';
+
+  let html = '';
+
+  // Simple previews based on type
+  if (type === 'habit-tracker' || type === 'todo-list' || type === 'shopping-list') {
+    html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="habit-list" style="${columnStyle}">`;
+    const itemsToShow = wizardData.items.length > 0 ? wizardData.items : [{emoji: '✓', text: 'Sample item'}];
+    itemsToShow.forEach(item => {
+      html += `
+        <div class="habit-row" style="margin-bottom: ${spacing}px; break-inside: avoid;">
+          <div class="checkbox ${checkboxStyle}"></div>
+          <span>${item.emoji} ${item.text || '...'}</span>
+        </div>
+      `;
+    });
+    html += '</div>';
+  } else if (type === 'weekly-habits') {
+    const days = ['M','T','W','T','F','S','S'];
+    html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div style="font-size:9px;">`;
+    const itemsToShow = wizardData.items.length > 0 ? wizardData.items.slice(0, 5) : [{emoji: '✓', text: 'Sample'}];
+    itemsToShow.forEach(item => {
+      html += `<div style="margin-bottom:6px;">
+        <div style="font-weight:bold;margin-bottom:2px;">${item.emoji} ${item.text || '...'}</div>
+        <div style="display:flex;gap:4px;">`;
+      days.forEach(d => {
+        html += `<div style="text-align:center;flex:1;">
+          <div style="font-size:7px;">${d}</div>
+          <div class="checkbox ${checkboxStyle}" style="width:16px;height:16px;margin:2px auto;"></div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += '</div>';
+  } else if (type === 'mood-tracker') {
+    const moods = ['😊', '😐', '😔', '😡', '😰', '😴', '🤩'];
+    html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div style="font-size:9px;margin-top:8px;">`;
+    const itemsToShow = wizardData.items.length > 0 ? wizardData.items.slice(0, 7) : Array(3).fill({emoji: '', text: 'Day'});
+    itemsToShow.forEach((item, i) => {
+      html += `<div style="display:flex;align-items:center;margin-bottom:6px;gap:4px;">
+        <span style="font-weight:bold;width:25px;">${item.text || `Day ${i+1}`}</span>
+        <div style="display:flex;gap:2px;flex:1;">`;
+      moods.forEach(mood => {
+        html += `<span style="font-size:14px;opacity:0.3;">${mood}</span>`;
+      });
+      html += `</div></div>`;
+    });
+    html += '</div>';
+  } else if (type === 'water-tracker') {
+    html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div style="margin-top:8px;">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px;justify-items:center;">`;
+    for (let i = 0; i < 8; i++) {
+      html += `<div style="text-align:center;">
+        <div style="font-size:16px;">💧</div>
+        <div class="checkbox ${checkboxStyle}" style="width:14px;height:14px;margin:2px auto;"></div>
+      </div>`;
+    }
+    html += `</div></div>`;
+  } else if (type === 'countdown') {
+    html = `
+      <div style="text-align:center;padding:12px 0;">
+        <h3 style="${borderStyle} font-weight: ${fontWeight};margin-bottom:12px;">${title}</h3>
+        <div style="font-size:32px;font-weight:bold;margin:8px 0;">30</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;">Days to Go</div>
+      </div>
+    `;
+  } else if (type === 'date-stamp') {
+    const now = new Date();
+    const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    html = `
+      <div class="date-header">
+        <div class="day-name">${dayNames[now.getDay()]}</div>
+        <div class="day-number">${now.getDate()}</div>
+        <div class="day-name">${monthNames[now.getMonth()]} ${now.getFullYear()}</div>
+      </div>
+      <div class="dotted-section"></div>
+    `;
+  } else if (type === 'blank-label') {
+    html = `<h3 style="${borderStyle} font-weight: ${fontWeight};">${title}</h3><div class="dotted-section" style="flex:1;min-height:80px;"></div>`;
+  } else if (type === 'qr-code') {
+    html = `
+      ${title ? `<h3 style="text-align:center;margin-bottom:8px;">${title}</h3>` : ''}
+      <div style="text-align:center;padding:16px;">
+        <div style="width:120px;height:120px;margin:0 auto;border:2px solid black;display:flex;align-items:center;justify-content:center;background:white;">
+          <div style="font-size:8px;padding:8px;">QR Code</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return html;
 }
 </script>
 
@@ -2306,53 +2532,66 @@ function renderWizardStepOptions() {
       </div>
     </div>
 
-    <div class="wizard-body">
-      <!-- Step 0: Type -->
-      <div id="wizard-step-0" class="wizard-step">
-        <h3>Choose Your Sticker Type</h3>
-        <div id="wizard-step-0-content"></div>
-      </div>
+    <div class="wizard-main">
+      <div class="wizard-left">
+        <div class="wizard-body">
+          <!-- Step 0: Type -->
+          <div id="wizard-step-0" class="wizard-step">
+            <h3>Choose Your Sticker Type</h3>
+            <div id="wizard-step-0-content"></div>
+          </div>
 
-      <!-- Step 1: Dimensions -->
-      <div id="wizard-step-1" class="wizard-step">
-        <h3>Set Dimensions</h3>
-        <div class="wizard-input-group">
-          <label>Sticker Height: <span id="wizard-height-value">50mm</span></label>
-          <input type="range" min="20" max="200" step="5" value="50"
-                 oninput="updateWizardHeight(this.value)">
-          <p style="font-size:11px;color:#999;margin-top:8px;">
-            Width is fixed at 57mm for thermal printer
-          </p>
+          <!-- Step 1: Dimensions -->
+          <div id="wizard-step-1" class="wizard-step">
+            <h3>Set Dimensions</h3>
+            <div class="wizard-input-group">
+              <label>Sticker Height: <span id="wizard-height-value">50mm</span></label>
+              <input type="range" min="20" max="200" step="5" value="50"
+                     oninput="updateWizardHeight(this.value); updateWizardPreview();">
+              <p style="font-size:11px;color:#999;margin-top:8px;">
+                Width is fixed at 57mm for thermal printer
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2: Title & Style -->
+          <div id="wizard-step-2" class="wizard-step">
+            <h3>Title & Basic Style</h3>
+            <div class="wizard-input-group">
+              <label>Sticker Title</label>
+              <input type="text" id="wizard-title" placeholder="My Sticker"
+                     oninput="wizardData.title = this.value; updateWizardPreview();">
+            </div>
+          </div>
+
+          <!-- Step 3: Items -->
+          <div id="wizard-step-3" class="wizard-step">
+            <h3>Add Your Items</h3>
+            <div id="wizard-step-3-content"></div>
+          </div>
+
+          <!-- Step 4: Options -->
+          <div id="wizard-step-4" class="wizard-step">
+            <h3>Customize Options</h3>
+            <div id="wizard-step-4-content"></div>
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button id="wizard-btn-back" class="wizard-btn-back" onclick="wizardBack()">← Back</button>
+          <button id="wizard-btn-next" class="wizard-btn-next" onclick="wizardNext()">Next →</button>
+          <button id="wizard-btn-finish" class="wizard-btn-finish" onclick="wizardFinish()" style="display:none;">✨ Create Sticker</button>
         </div>
       </div>
 
-      <!-- Step 2: Title & Style -->
-      <div id="wizard-step-2" class="wizard-step">
-        <h3>Title & Basic Style</h3>
-        <div class="wizard-input-group">
-          <label>Sticker Title</label>
-          <input type="text" id="wizard-title" placeholder="My Sticker"
-                 oninput="wizardData.title = this.value;">
+      <div class="wizard-preview-panel">
+        <div class="wizard-preview-header">
+          <h4>Preview</h4>
+        </div>
+        <div class="wizard-preview-body" id="wizard-preview">
+          <!-- Preview will be rendered here -->
         </div>
       </div>
-
-      <!-- Step 3: Items -->
-      <div id="wizard-step-3" class="wizard-step">
-        <h3>Add Your Items</h3>
-        <div id="wizard-step-3-content"></div>
-      </div>
-
-      <!-- Step 4: Options -->
-      <div id="wizard-step-4" class="wizard-step">
-        <h3>Customize Options</h3>
-        <div id="wizard-step-4-content"></div>
-      </div>
-    </div>
-
-    <div class="wizard-footer">
-      <button id="wizard-btn-back" class="wizard-btn-back" onclick="wizardBack()">← Back</button>
-      <button id="wizard-btn-next" class="wizard-btn-next" onclick="wizardNext()">Next →</button>
-      <button id="wizard-btn-finish" class="wizard-btn-finish" onclick="wizardFinish()" style="display:none;">✨ Create Sticker</button>
     </div>
   </div>
 </div>
